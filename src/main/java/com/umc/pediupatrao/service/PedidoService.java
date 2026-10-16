@@ -176,6 +176,50 @@ public class PedidoService {
         return pedidoRepository.save(pedido);
     }
 
+    public Pedido cancelar(String id, String justificativa) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
+
+        if (justificativa == null || justificativa.isBlank()) {
+            throw new IllegalArgumentException("Informe a justificativa do cancelamento.");
+        }
+
+        // depois que saiu ou se ja ta cancelado n pode mais
+        if (!pedido.getStatus().antesDaSaida()) {
+            throw new IllegalStateException("O pedido em " + pedido.getStatus() + " não pode ser cancelado.");
+        }
+
+        // n apaga nada, so muda o status e guarda quem cancelou e por que
+        pedido.setStatus(StatusPedido.CANCELADO);
+        pedido.setDataHoraCancelamento(LocalDateTime.now());
+        pedido.setResponsavelCancelamento(UsuarioLogado.username());
+        pedido.setJustificativaCancelamento(justificativa.trim());
+
+        return pedidoRepository.save(pedido);
+    }
+
+    public Pedido aplicarDesconto(String id, int percentual) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
+
+        if (percentual < 1 || percentual > 20) {
+            throw new IllegalArgumentException("O desconto precisa ser de 1% a 20%.");
+        }
+
+        if (!pedido.getStatus().antesDaSaida()) {
+            throw new IllegalStateException("O pedido em " + pedido.getStatus() + " não pode receber desconto.");
+        }
+
+        // sempre calcula em cima do subtotal, entao aplicar de novo troca o desconto e n soma
+        int valorDesconto = (int) Math.round(pedido.getSubtotal() * percentual / 100.0);
+
+        pedido.setDescontoPercentual(percentual);
+        pedido.setValorDesconto(valorDesconto);
+        pedido.setValorTotal(pedido.getSubtotal() - valorDesconto);
+
+        return pedidoRepository.save(pedido);
+    }
+
     public Pedido voltarStatus(String id) {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));

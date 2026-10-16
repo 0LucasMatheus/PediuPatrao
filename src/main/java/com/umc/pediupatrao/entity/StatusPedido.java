@@ -38,6 +38,11 @@ public enum StatusPedido {
         return proximos().contains(novo);
     }
 
+    // ainda n saiu nem foi cancelado, so assim pode cancelar ou dar desconto
+    public boolean antesDaSaida() {
+        return this == RECEBIDO || this == EM_PREPARACAO || this == PRONTO;
+    }
+
     // saiu pra entrega ou foi retirado, ai tem que registrar a saida
     public boolean ehSaida() {
         return this == SAIU_PARA_ENTREGA || this == RETIRADO;

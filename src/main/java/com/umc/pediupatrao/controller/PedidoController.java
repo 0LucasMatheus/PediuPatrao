@@ -37,6 +37,20 @@ public class PedidoController {
         return pedidoService.atualizarStatus(id, status);
     }
 
+    // so gerente, nem o admin pode
+    @PreAuthorize("hasRole('GERENTE')")
+    @PutMapping("/{id}/cancelar")
+    public Pedido cancelar(@PathVariable String id, @RequestParam String justificativa) {
+        return pedidoService.cancelar(id, justificativa);
+    }
+
+    // so gerente, nem o admin pode
+    @PreAuthorize("hasRole('GERENTE')")
+    @PutMapping("/{id}/desconto")
+    public Pedido aplicarDesconto(@PathVariable String id, @RequestParam int percentual) {
+        return pedidoService.aplicarDesconto(id, percentual);
+    }
+
     @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
     @PutMapping("/{id}/voltar")
     public Pedido voltarStatus(@PathVariable String id) {

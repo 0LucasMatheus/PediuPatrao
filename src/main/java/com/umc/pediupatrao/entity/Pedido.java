@@ -33,4 +33,9 @@ public class Pedido {
     // saida, quando sai pra entrega ou e retirado
     private LocalDateTime dataHoraSaida;
     private String responsavelSaida;
+
+    // cancelamento, so o gerente
+    private LocalDateTime dataHoraCancelamento;
+    private String responsavelCancelamento;
+    private String justificativaCancelamento;
 }

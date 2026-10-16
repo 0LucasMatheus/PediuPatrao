@@ -1,9 +1,13 @@
 package com.umc.pediupatrao.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Getter
+@Setter
 @Document(collection = "usuarios") // Define a coleção no MongoDB
 public class Usuario {
     @Id
@@ -13,39 +17,5 @@ public class Usuario {
     // aceita a senha quando chega no json mas nao devolve ela na resposta
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password; // Senha criptografada
-    private String role;     // Papel do usuário, como ADMIN ou USER
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-    
-    
+    private Perfil role;     // ADMIN, GERENTE OU ATENDENTE
 }

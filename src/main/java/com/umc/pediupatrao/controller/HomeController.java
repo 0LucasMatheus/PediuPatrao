@@ -2,6 +2,8 @@ package com.umc.pediupatrao.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.umc.pediupatrao.dto.ItemPedidoRequest;
+import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
@@ -12,6 +14,7 @@ import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -131,6 +134,39 @@ public class HomeController {
         model.addAttribute("content", "pedidos :: content");
         log.info("Carregando fragmento: pedidos :: content");
         return "layout";
+    }
+
+    @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
+    @GetMapping("/pedidos/novo")
+    public String novoPedidoForm(Model model) {
+        model.addAttribute("clientes", clienteService.listarClientes());
+        model.addAttribute("content", "pedidos/form :: content");
+        return "layout";
+    }
+
+    // o form manda duas listas na mesma ordem, uma de produto e uma de quantidade
+    @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
+    @PostMapping("/pedidos/salvar")
+    public String salvarPedido(@RequestParam String clienteId,
+            @RequestParam(required = false) List<String> produtoId,
+            @RequestParam(required = false) List<Integer> quantidade,
+            RedirectAttributes redirectAttributes) {
+        List<ItemPedidoRequest> itens = new ArrayList<>();
+
+        if (produtoId != null && quantidade != null) {
+            for (int i = 0; i < produtoId.size(); i++) {
+                // campo vazio vem null, vira 0 e o service barra
+                Integer qtd = quantidade.get(i);
+                if (qtd == null) {
+                    qtd = 0;
+                }
+                itens.add(new ItemPedidoRequest(produtoId.get(i), qtd));
+            }
+        }
+
+        pedidoService.criarPedido(new PedidoRequest(clienteId, itens));
+        redirectAttributes.addFlashAttribute("sucesso", "Pedido registrado com sucesso!");
+        return "redirect:/pedidos";
     }
 
     // ========================

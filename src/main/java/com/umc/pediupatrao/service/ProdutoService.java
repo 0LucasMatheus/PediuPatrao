@@ -17,6 +17,11 @@ public class ProdutoService {
         return produtoRepository.findAll();
     }
 
+    // usado na busca do adicionar item do pedido
+    public List<Produto> buscarAtivosPorNome(String nome) {
+        return produtoRepository.findTop10ByNomeContainingIgnoreCaseAndAtivoTrue(nome);
+    }
+
     public Optional<Produto> buscarPorId(String id) {
         return produtoRepository.findById(id);
     }

@@ -21,6 +21,12 @@ public class ProdutoController {
         return produtoService.listarProdutos();
     }
 
+    // busca pro adicionar item do pedido
+    @GetMapping("/busca")
+    public List<Produto> buscarPorNome(@RequestParam String nome) {
+        return produtoService.buscarAtivosPorNome(nome);
+    }
+
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluirProduto(@PathVariable String id) {

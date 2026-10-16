@@ -5,8 +5,10 @@ import com.umc.pediupatrao.entity.Auditoria;
 import com.umc.pediupatrao.entity.CampoAlterado;
 import com.umc.pediupatrao.repository.AuditoriaRepository;
 import com.umc.pediupatrao.security.UsuarioLogado;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -126,6 +128,26 @@ public class AuditoriaService {
         if (valor == null) {
             return null;
         }
+
+        // data vem do mongo como Date, deixa no formato br
+        if (valor instanceof Date) {
+            return new SimpleDateFormat("dd/MM/yyyy HH:mm").format((Date) valor);
+        }
+
+        // lista tipo os itens do pedido, transforma cada um e junta
+        if (valor instanceof List) {
+            List<String> textos = new ArrayList<>();
+            for (Object item : (List<?>) valor) {
+                textos.add(paraTexto(item));
+            }
+            return String.join(" | ", textos);
+        }
+
+        // documento dentro de documento, tipo um item, vira json
+        if (valor instanceof Document) {
+            return ((Document) valor).toJson();
+        }
+
         return valor.toString();
     }
 

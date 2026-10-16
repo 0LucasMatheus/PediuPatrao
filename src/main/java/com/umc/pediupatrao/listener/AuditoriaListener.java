@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class AuditoriaListener extends AbstractMongoEventListener<Object> {
 
     // collections que sao auditadas
-    private static final List<String> COLLECTIONS_AUDITADAS = List.of("clientes");
+    private static final List<String> COLLECTIONS_AUDITADAS = List.of("clientes", "pedidos");
 
     private final MongoTemplate mongoTemplate;
     private final AuditoriaService auditoriaService;

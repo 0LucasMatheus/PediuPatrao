@@ -1,8 +1,12 @@
 package com.umc.pediupatrao.controller;
 
+import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Pedido;
+import com.umc.pediupatrao.entity.StatusPedido;
 import com.umc.pediupatrao.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -14,10 +18,12 @@ public class PedidoController {
     @Autowired
     private PedidoService pedidoService;
 
+    // recebe o PedidoRequest e n o Pedido, entao o json n consegue mandar total nem preco
     @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
     @PostMapping
-    public Pedido criarPedido(@RequestBody Pedido pedido) {
-        return pedidoService.criarPedido(pedido);
+    public ResponseEntity<Pedido> criarPedido(@RequestBody PedidoRequest request) {
+        Pedido criado = pedidoService.criarPedido(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
 
     @GetMapping
@@ -27,9 +33,7 @@ public class PedidoController {
 
     @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
     @PutMapping("/{id}/status")
-    public Pedido atualizarStatus(@PathVariable String id, @RequestParam String status) {
+    public Pedido atualizarStatus(@PathVariable String id, @RequestParam StatusPedido status) {
         return pedidoService.atualizarStatus(id, status);
     }
-    
-    
 }

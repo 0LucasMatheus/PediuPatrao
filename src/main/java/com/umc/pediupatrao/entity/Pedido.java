@@ -1,11 +1,9 @@
 package com.umc.pediupatrao.entity;
 
-import jakarta.persistence.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "pedidos")
-@Entity
 public class Pedido {
     @Id
     private String id;

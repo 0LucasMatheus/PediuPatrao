@@ -1,5 +1,6 @@
 package com.umc.pediupatrao.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -8,6 +9,9 @@ public class Usuario {
     @Id
     private String id;
     private String username; // Nome de usuário para login
+
+    // aceita a senha quando chega no json mas nao devolve ela na resposta
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password; // Senha criptografada
     private String role;     // Papel do usuário, como ADMIN ou USER
 

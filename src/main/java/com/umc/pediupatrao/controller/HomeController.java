@@ -189,6 +189,39 @@ public class HomeController {
         return "redirect:/pedidos";
     }
 
+    // botoes de avancar status na lista
+    @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
+    @PostMapping("/pedidos/{id}/status")
+    public String atualizarStatusPedido(@PathVariable String id,
+            @RequestParam StatusPedido status,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        pedidoService.atualizarStatus(id, status);
+        redirectAttributes.addFlashAttribute("sucesso", "Status do pedido atualizado!");
+
+        // volta pra mesma lista com os mesmos filtros
+        String voltar = request.getHeader("Referer");
+        if (voltar == null) {
+            voltar = "/pedidos";
+        }
+        return "redirect:" + voltar;
+    }
+
+    @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
+    @PostMapping("/pedidos/{id}/voltar")
+    public String voltarStatusPedido(@PathVariable String id,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        pedidoService.voltarStatus(id);
+        redirectAttributes.addFlashAttribute("sucesso", "Pedido voltou para o status anterior.");
+
+        String voltar = request.getHeader("Referer");
+        if (voltar == null) {
+            voltar = "/pedidos";
+        }
+        return "redirect:" + voltar;
+    }
+
     // ========================
     // PRODUTOS
     // ========================

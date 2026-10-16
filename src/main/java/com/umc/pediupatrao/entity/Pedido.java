@@ -29,4 +29,8 @@ public class Pedido {
     // entrada
     private LocalDateTime dataHoraEntrada;
     private String responsavelEntrada;
+
+    // saida, quando sai pra entrega ou e retirado
+    private LocalDateTime dataHoraSaida;
+    private String responsavelSaida;
 }

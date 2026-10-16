@@ -72,12 +72,13 @@
                         <th>Itens</th>
                         <th>Total</th>
                         <th>Status</th>
+                        <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <!-- Lista vazia -->
                     <tr th:if="${pedidos.empty}">
-                        <td colspan="5" class="text-center text-muted py-5">
+                        <td colspan="6" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                             Nenhum pedido nesse dia.
                         </td>
@@ -103,6 +104,33 @@
                                                   (${pedido.status?.name() == 'FINALIZADO'} ? 'bg-success' :
                                                   (${pedido.status?.name() == 'RECEBIDO'} ? 'bg-secondary' : 'bg-warning text-dark'))"
                                   th:text="${#strings.replace(pedido.status?.name(), '_', ' ')}"></span>
+                            <!-- quando saiu mostra hora e quem -->
+                            <div class="small text-muted" th:if="${pedido.dataHoraSaida != null}">
+                                saída <span th:text="${#temporals.format(pedido.dataHoraSaida, 'HH:mm')}"></span>
+                                - <span th:text="${pedido.responsavelSaida}"></span>
+                            </div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <!-- um botao pra cada proximo status permitido -->
+                            <th:block sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')">
+                                <!-- voltar so aparece se o status permite -->
+                                <form th:if="${pedido.status.anterior() != null}"
+                                      th:action="@{/pedidos/{id}/voltar(id=${pedido.id})}"
+                                      method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary mb-1" title="Voltar status">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                </form>
+                                <form th:each="proximo : ${pedido.status.proximos()}"
+                                      th:action="@{/pedidos/{id}/status(id=${pedido.id})}"
+                                      method="post" class="d-inline">
+                                    <input type="hidden" name="status" th:value="${proximo}">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary mb-1">
+                                        <i class="bi bi-arrow-right"></i>
+                                        <span th:text="${#strings.replace(proximo.name(), '_', ' ')}"></span>
+                                    </button>
+                                </form>
+                            </th:block>
                         </td>
                     </tr>
                 </tbody>

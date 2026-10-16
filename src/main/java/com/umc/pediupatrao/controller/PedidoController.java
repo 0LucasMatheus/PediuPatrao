@@ -36,4 +36,10 @@ public class PedidoController {
     public Pedido atualizarStatus(@PathVariable String id, @RequestParam StatusPedido status) {
         return pedidoService.atualizarStatus(id, status);
     }
+
+    @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
+    @PutMapping("/{id}/voltar")
+    public Pedido voltarStatus(@PathVariable String id) {
+        return pedidoService.voltarStatus(id);
+    }
 }

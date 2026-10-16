@@ -145,9 +145,48 @@ public class PedidoService {
         return Sort.by("dataHoraEntrada").descending();
     }
 
-    public Pedido atualizarStatus(String id, StatusPedido status) {
-        Pedido pedido = pedidoRepository.findById(id).orElseThrow();
-        pedido.setStatus(status);
+    public Pedido atualizarStatus(String id, StatusPedido novoStatus) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
+
+        if (novoStatus == null) {
+            throw new IllegalArgumentException("Informe o novo status.");
+        }
+
+        // cancelar tem regra propria, so o gerente e com justificativa
+        if (novoStatus == StatusPedido.CANCELADO) {
+            throw new IllegalStateException("Para cancelar use a opção de cancelamento.");
+        }
+
+        // a regra de qual status pode ir pra qual ta no enum
+        StatusPedido atual = pedido.getStatus();
+        if (!atual.podeIrPara(novoStatus)) {
+            throw new IllegalStateException("Não é possível mudar o pedido de "
+                    + atual + " para " + novoStatus + ".");
+        }
+
+        pedido.setStatus(novoStatus);
+
+        // saida e obrigatorio registrar quando e quem
+        if (novoStatus.ehSaida()) {
+            pedido.setDataHoraSaida(LocalDateTime.now());
+            pedido.setResponsavelSaida(UsuarioLogado.username());
+        }
+
+        return pedidoRepository.save(pedido);
+    }
+
+    public Pedido voltarStatus(String id) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
+
+        // a regra de quem pode voltar ta no enum
+        StatusPedido anterior = pedido.getStatus().anterior();
+        if (anterior == null) {
+            throw new IllegalStateException("O pedido em " + pedido.getStatus() + " não pode voltar de status.");
+        }
+
+        pedido.setStatus(anterior);
         return pedidoRepository.save(pedido);
     }
 

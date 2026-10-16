@@ -124,12 +124,19 @@
 
         buscaCliente.addEventListener('input', async function () {
             resultadosCliente.innerHTML = '';
-            if (this.value.length < 2) {
+            const texto = this.value;
+            if (texto.length < 2) {
                 return;
             }
 
-            const resposta = await fetch('/api/clientes/busca?nome=' + encodeURIComponent(this.value));
+            const resposta = await fetch('/api/clientes/busca?nome=' + encodeURIComponent(texto));
             const clientes = await resposta.json();
+
+            // se digitou mais coisa enquanto buscava, essa resposta e velha e ignora
+            if (buscaCliente.value !== texto) {
+                return;
+            }
+            resultadosCliente.innerHTML = '';
 
             if (clientes.length === 0) {
                 resultadosCliente.innerHTML = '<div class="list-group-item text-muted">Nenhum cliente encontrado</div>';
@@ -155,12 +162,19 @@
         // busca enquanto digita, a partir de 2 letras
         buscaProduto.addEventListener('input', async function () {
             resultados.innerHTML = '';
-            if (this.value.length < 2) {
+            const texto = this.value;
+            if (texto.length < 2) {
                 return;
             }
 
-            const resposta = await fetch('/api/produtos/busca?nome=' + encodeURIComponent(this.value));
+            const resposta = await fetch('/api/produtos/busca?nome=' + encodeURIComponent(texto));
             const produtos = await resposta.json();
+
+            // se digitou mais coisa enquanto buscava, essa resposta e velha e ignora
+            if (buscaProduto.value !== texto) {
+                return;
+            }
+            resultados.innerHTML = '';
 
             if (produtos.length === 0) {
                 resultados.innerHTML = '<div class="list-group-item text-muted">Nenhum produto encontrado</div>';

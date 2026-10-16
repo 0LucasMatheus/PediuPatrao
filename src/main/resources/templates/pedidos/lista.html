@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Lista de Pedidos</title>
+</head>
+<body>
+
+<div th:fragment="content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-bag me-2 text-primary"></i>Pedidos
+        </h2>
+        <a th:href="@{/pedidos/novo}" class="btn btn-primary" sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')">
+            <i class="bi bi-plus-lg me-1"></i> Novo Pedido
+        </a>
+    </div>
+
+    <!-- Mensagens de feedback -->
+    <div th:replace="~{fragments/alertas :: alertas}"></div>
+
+    <!-- filtros, e GET entao fica tudo na url -->
+    <form id="filtros" th:action="@{/pedidos}" method="get" class="card card-body shadow-sm mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small">Dia</label>
+                <input type="date" name="dia" class="form-control form-control-sm" th:value="${dia}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Cliente</label>
+                <input type="text" name="cliente" class="form-control form-control-sm"
+                       th:value="${cliente}" placeholder="Nome do cliente">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option th:each="s : ${todosStatus}"
+                            th:value="${s}"
+                            th:text="${#strings.replace(s.name(), '_', ' ')}"
+                            th:selected="${status == s.name()}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Ordenar por</label>
+                <select name="ordem" class="form-select form-select-sm">
+                    <option value="recentes" th:selected="${ordem == 'recentes'}">Mais recentes</option>
+                    <option value="antigos" th:selected="${ordem == 'antigos'}">Mais antigos</option>
+                    <option value="maior_valor" th:selected="${ordem == 'maior_valor'}">Maior valor</option>
+                    <option value="menor_valor" th:selected="${ordem == 'menor_valor'}">Menor valor</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                <a th:href="@{/pedidos}" class="btn btn-sm btn-outline-secondary" title="Limpar">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tabela -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-4">Entrada</th>
+                        <th>Cliente</th>
+                        <th>Itens</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Lista vazia -->
+                    <tr th:if="${pedidos.empty}">
+                        <td colspan="5" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            Nenhum pedido nesse dia.
+                        </td>
+                    </tr>
+                    <!-- Linhas -->
+                    <tr th:each="pedido : ${pedidos.content}">
+                        <td class="ps-4">
+                            <div th:text="${#temporals.format(pedido.dataHoraEntrada, 'HH:mm')}"></div>
+                            <small class="text-muted" th:text="${pedido.responsavelEntrada}"></small>
+                        </td>
+                        <td th:text="${pedido.clienteNome}"></td>
+                        <td class="small">
+                            <div th:each="item : ${pedido.itens}"
+                                 th:text="${item.quantidade} + 'x ' + ${item.nomeProduto}"></div>
+                        </td>
+                        <!-- total ta em centavos -->
+                        <td class="fw-medium"
+                            th:text="'R$ ' + ${#numbers.formatDecimal(pedido.valorTotal / 100.0, 1, 'POINT', 2, 'COMMA')}"></td>
+                        <td>
+                            <!-- cor de cada status -->
+                            <span class="badge"
+                                  th:classappend="${pedido.status?.name() == 'CANCELADO'} ? 'bg-danger' :
+                                                  (${pedido.status?.name() == 'FINALIZADO'} ? 'bg-success' :
+                                                  (${pedido.status?.name() == 'RECEBIDO'} ? 'bg-secondary' : 'bg-warning text-dark'))"
+                                  th:text="${#strings.replace(pedido.status?.name(), '_', ' ')}"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <div class="small text-muted mb-2">
+                Total: <strong th:text="${pedidos.totalElements}"></strong> pedido(s)
+            </div>
+            <div th:replace="~{fragments/paginacao :: paginacao(${pedidos})}"></div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

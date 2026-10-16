@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import com.umc.pediupatrao.dto.ItemPedidoRequest;
 import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Cliente;
-import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.service.AuditoriaService;
@@ -14,9 +13,12 @@ import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
+import com.umc.pediupatrao.entity.StatusPedido;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -128,11 +130,30 @@ public class HomeController {
     // PEDIDOS
     // ========================
     @GetMapping("/pedidos")
-    public String pedidos(Model model) {
-        List<Pedido> pedidos = pedidoService.listarPedidos();
-        model.addAttribute("pedidos", pedidos);
-        model.addAttribute("content", "pedidos :: content");
-        log.info("Carregando fragmento: pedidos :: content");
+    public String pedidos(@RequestParam(required = false) String cliente,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dia,
+            @RequestParam(required = false) String ordem,
+            @RequestParam(defaultValue = "0") int pagina,
+            Model model) {
+        // sem dia escolhido mostra os de hoje
+        if (dia == null) {
+            dia = LocalDate.now();
+        }
+        if (pagina < 0) {
+            pagina = 0;
+        }
+
+        model.addAttribute("pedidos", pedidoService.buscar(cliente, status, dia, ordem, pagina));
+
+        // devolve os filtros pra tela continuar preenchida
+        model.addAttribute("cliente", cliente);
+        model.addAttribute("status", status);
+        model.addAttribute("dia", dia);
+        model.addAttribute("ordem", ordem);
+        model.addAttribute("todosStatus", StatusPedido.values());
+
+        model.addAttribute("content", "pedidos/lista :: content");
         return "layout";
     }
 

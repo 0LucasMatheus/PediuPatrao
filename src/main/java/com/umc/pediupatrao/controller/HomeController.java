@@ -69,11 +69,23 @@ public class HomeController {
     // USUÁRIOS
     // ========================
     @GetMapping("/usuarios")
-    public String listarUsuarios(Model model) {
-        List<Usuario> usuarios = (List<Usuario>) usuarioService.listarTodos();
-        model.addAttribute("usuarios", usuarios);
+    public String listarUsuarios(@RequestParam(required = false) String username,
+            @RequestParam(required = false) String perfil,
+            @RequestParam(required = false) String ordem,
+            @RequestParam(defaultValue = "0") int pagina,
+            Model model) {
+        if (pagina < 0) {
+            pagina = 0;
+        }
+
+        model.addAttribute("usuarios", usuarioService.buscar(username, perfil, ordem, pagina));
+
+        // devolve os filtros pra tela continuar preenchida
+        model.addAttribute("username", username);
+        model.addAttribute("perfil", perfil);
+        model.addAttribute("ordem", ordem);
+
         model.addAttribute("content", "usuarios/lista :: content");
-        log.info("Carregando fragmento: usuarios/lista :: content");
         return "layout";
     }
 

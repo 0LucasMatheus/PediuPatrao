@@ -19,6 +19,40 @@
     <!-- Mensagens de feedback -->
     <div th:replace="~{fragments/alertas :: alertas}"></div>
 
+    <form id="filtros" th:action="@{/usuarios}" method="get" class="card card-body shadow-sm mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small">Username</label>
+                <input type="text" name="username" class="form-control form-control-sm"
+                       th:value="${username}" placeholder="Ex: joao">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Perfil</label>
+                <select name="perfil" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option value="ADMIN" th:selected="${perfil == 'ADMIN'}">ADMIN</option>
+                    <option value="GERENTE" th:selected="${perfil == 'GERENTE'}">GERENTE</option>
+                    <option value="ATENDENTE" th:selected="${perfil == 'ATENDENTE'}">ATENDENTE</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Ordenar por</label>
+                <select name="ordem" class="form-select form-select-sm">
+                    <option value="username" th:selected="${ordem == 'username'}">Username A-Z</option>
+                    <option value="username_desc" th:selected="${ordem == 'username_desc'}">Username Z-A</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                <a th:href="@{/usuarios}" class="btn btn-sm btn-outline-secondary" title="Limpar">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
     <!-- Tabela -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
@@ -33,15 +67,16 @@
                 </thead>
                 <tbody>
                     <!-- Lista vazia -->
-                    <tr th:if="${#lists.isEmpty(usuarios)}">
+                    <tr th:if="${usuarios.empty}">
                         <td colspan="4" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                             Nenhum usuário cadastrado.
                         </td>
                     </tr>
                     <!-- Linhas -->
-                    <tr th:each="usuario, stat : ${usuarios}">
-                        <td class="ps-4 text-muted" th:text="${stat.index + 1}"></td>
+                    <tr th:each="usuario, stat : ${usuarios.content}">
+                        <!-- numero continua contando nas outras paginas -->
+                        <td class="ps-4 text-muted" th:text="${usuarios.number * usuarios.size + stat.index + 1}"></td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
                                 <div class="avatar-circle">
@@ -75,8 +110,11 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(usuarios)}">
-            Total: <strong th:text="${#lists.size(usuarios)}"></strong> usuário(s)
+        <div class="card-footer">
+            <div class="small text-muted mb-2">
+                Total: <strong th:text="${usuarios.totalElements}"></strong> usuário(s)
+            </div>
+            <div th:replace="~{fragments/paginacao :: paginacao(${usuarios})}"></div>
         </div>
     </div>
 

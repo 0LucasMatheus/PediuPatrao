@@ -3,20 +3,65 @@ package com.umc.pediupatrao.service;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.repository.UsuarioRepository;
 import com.umc.pediupatrao.security.UsuarioLogado;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Service
 public class UsuarioService {
 
+    private static final int TAMANHO_PAGINA = 20;
+
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MongoTemplate mongoTemplate;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+            MongoTemplate mongoTemplate) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.mongoTemplate = mongoTemplate;
+    }
+
+    // lista da tela com busca, filtro de perfil, ordenacao e paginacao
+    public Page<Usuario> buscar(String username, String perfil, String ordem, int pagina) {
+        Query query = new Query();
+
+        if (username != null && !username.isBlank()) {
+            // tipo um ILIKE '%texto%' do sql
+            query.addCriteria(Criteria.where("username").regex(Pattern.quote(username), "i"));
+        }
+        if (perfil != null && !perfil.isBlank()) {
+            query.addCriteria(Criteria.where("role").is(perfil));
+        }
+
+        // ordena igual portugues, sem separar maiuscula de minuscula
+        query.collation(Collation.of("pt"));
+
+        long total = mongoTemplate.count(query, Usuario.class);
+
+        Sort ordenacao = Sort.by("username").ascending();
+        if ("username_desc".equals(ordem)) {
+            ordenacao = Sort.by("username").descending();
+        }
+
+        Pageable paginacao = PageRequest.of(pagina, TAMANHO_PAGINA, ordenacao);
+        query.with(paginacao);
+        List<Usuario> usuarios = mongoTemplate.find(query, Usuario.class);
+
+        return new PageImpl<>(usuarios, paginacao, total);
     }
 
     // Busca um usuário por ID

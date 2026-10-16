@@ -335,11 +335,21 @@ public class HomeController {
     // CLIENTES
     // ========================
     @GetMapping("/clientes")
-    public String clientes(Model model) {
-        List<Cliente> clientes = clienteService.listarClientes();
-        model.addAttribute("clientes", clientes);
+    public String clientes(@RequestParam(required = false) String busca,
+            @RequestParam(required = false) String ordem,
+            @RequestParam(defaultValue = "0") int pagina,
+            Model model) {
+        if (pagina < 0) {
+            pagina = 0;
+        }
+
+        model.addAttribute("clientes", clienteService.buscar(busca, ordem, pagina));
+
+        // devolve os filtros pra tela continuar preenchida
+        model.addAttribute("busca", busca);
+        model.addAttribute("ordem", ordem);
+
         model.addAttribute("content", "clientes/lista :: content");
-        log.info("Carregando fragmento: clientes/lista :: content");
         return "layout";
     }
 

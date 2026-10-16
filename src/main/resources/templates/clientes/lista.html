@@ -17,6 +17,31 @@
     <!-- Mensagens de alertas -->
     <div th:replace="~{fragments/alertas :: alertas}"></div>
 
+    <form id="filtros" th:action="@{/clientes}" method="get" class="card card-body shadow-sm mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label small">Buscar</label>
+                <input type="text" name="busca" class="form-control form-control-sm"
+                       th:value="${busca}" placeholder="Nome ou telefone">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small">Ordenar por</label>
+                <select name="ordem" class="form-select form-select-sm">
+                    <option value="nome" th:selected="${ordem == 'nome'}">Nome A-Z</option>
+                    <option value="nome_desc" th:selected="${ordem == 'nome_desc'}">Nome Z-A</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                <a th:href="@{/clientes}" class="btn btn-sm btn-outline-secondary" title="Limpar">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
     <!-- Tabela de clientes -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
@@ -30,13 +55,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:if="${#lists.isEmpty(clientes)}">
+                    <tr th:if="${clientes.empty}">
                         <td colspan="4" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                            Nenhum cliente cadastrado.
+                            Nenhum cliente encontrado.
                         </td>
                     </tr>
-                    <tr th:each="cliente : ${clientes}">
+                    <tr th:each="cliente : ${clientes.content}">
                         <td class="ps-4 fw-medium" th:text="${cliente.nome} ?: '—'"></td>
                         <td th:text="${cliente.telefone} ?: '—'"></td>
                         <td>
@@ -63,8 +88,11 @@
                 </tbody>
             </table>
         </div>
-        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(clientes)}">
-            Total: <strong th:text="${#lists.size(clientes)}"></strong> cliente(s)
+        <div class="card-footer">
+            <div class="small text-muted mb-2">
+                Total: <strong th:text="${clientes.totalElements}"></strong> cliente(s)
+            </div>
+            <div th:replace="~{fragments/paginacao :: paginacao(${clientes})}"></div>
         </div>
     </div>
 </div>

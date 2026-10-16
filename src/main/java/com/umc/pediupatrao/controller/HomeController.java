@@ -266,11 +266,25 @@ public class HomeController {
     // PRODUTOS
     // ========================
     @GetMapping("/produtos")
-    public String produtos(Model model) {
-        List<Produto> produtos = produtoService.listarProdutos();
-        model.addAttribute("produtos", produtos);
+    public String produtos(@RequestParam(required = false) String nome,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String ativo,
+            @RequestParam(required = false) String ordem,
+            @RequestParam(defaultValue = "0") int pagina,
+            Model model) {
+        if (pagina < 0) {
+            pagina = 0;
+        }
+
+        model.addAttribute("produtos", produtoService.buscar(nome, tipo, ativo, ordem, pagina));
+
+        // devolve os filtros pra tela continuar preenchida
+        model.addAttribute("nome", nome);
+        model.addAttribute("tipo", tipo);
+        model.addAttribute("ativo", ativo);
+        model.addAttribute("ordem", ordem);
+
         model.addAttribute("content", "produtos/lista :: content");
-        log.info("Carregando fragmento: produtos/lista :: content");
         return "layout";
     }
 

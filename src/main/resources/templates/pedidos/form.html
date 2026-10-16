@@ -20,16 +20,23 @@
         <div class="card-body p-4">
 
             <!-- Cliente -->
-            <div class="mb-4">
-                <label for="clienteId" class="form-label fw-medium">
+            <div class="mb-4 position-relative">
+                <label for="buscaCliente" class="form-label fw-medium">
                     <i class="bi bi-person me-1"></i>Cliente
                 </label>
-                <select id="clienteId" name="clienteId" class="form-select" required>
-                    <option value="" selected disabled>Selecione o cliente</option>
-                    <option th:each="cliente : ${clientes}"
-                            th:value="${cliente.id}"
-                            th:text="${cliente.nome} + ' - ' + ${cliente.telefone}"></option>
-                </select>
+                <input type="text" id="buscaCliente" class="form-control"
+                       placeholder="Digite o nome do cliente" autocomplete="off">
+
+                <!-- aparece no lugar do campo depois de escolher -->
+                <div id="clienteEscolhido" class="form-control"
+                     style="display: none; justify-content: space-between; align-items: center;">
+                    <span id="nomeClienteEscolhido" class="fw-medium"></span>
+                    <button type="button" id="trocarCliente" class="btn-close" title="Trocar cliente"></button>
+                </div>
+
+                <!-- o id do cliente escolhido vai aqui -->
+                <input type="hidden" id="clienteId" name="clienteId">
+                <div id="resultadosCliente" class="list-group position-absolute w-100 shadow" style="z-index: 11;"></div>
             </div>
 
             <!-- Busca de produto -->
@@ -88,6 +95,62 @@
         function formatarCentavos(centavos) {
             return 'R$ ' + (centavos / 100).toFixed(2).replace('.', ',');
         }
+
+        // ===== busca de cliente =====
+        const buscaCliente = document.getElementById('buscaCliente');
+        const clienteId = document.getElementById('clienteId');
+        const resultadosCliente = document.getElementById('resultadosCliente');
+
+        const clienteEscolhido = document.getElementById('clienteEscolhido');
+        const nomeClienteEscolhido = document.getElementById('nomeClienteEscolhido');
+
+        // esconde o campo e mostra so o nome com o X
+        function escolherCliente(cliente) {
+            clienteId.value = cliente.id;
+            nomeClienteEscolhido.textContent = cliente.nome;
+            resultadosCliente.innerHTML = '';
+            buscaCliente.style.display = 'none';
+            clienteEscolhido.style.display = 'flex';
+        }
+
+        // clicou no X, apaga e volta o campo de busca
+        document.getElementById('trocarCliente').addEventListener('click', function () {
+            clienteId.value = '';
+            buscaCliente.value = '';
+            clienteEscolhido.style.display = 'none';
+            buscaCliente.style.display = '';
+            buscaCliente.focus();
+        });
+
+        buscaCliente.addEventListener('input', async function () {
+            resultadosCliente.innerHTML = '';
+            if (this.value.length < 2) {
+                return;
+            }
+
+            const resposta = await fetch('/api/clientes/busca?nome=' + encodeURIComponent(this.value));
+            const clientes = await resposta.json();
+
+            if (clientes.length === 0) {
+                resultadosCliente.innerHTML = '<div class="list-group-item text-muted">Nenhum cliente encontrado</div>';
+                return;
+            }
+
+            for (const cliente of clientes) {
+                const botao = document.createElement('button');
+                botao.type = 'button';
+                botao.className = 'list-group-item list-group-item-action d-flex justify-content-between';
+                botao.innerHTML = '<span></span><span class="text-muted"></span>';
+                botao.children[0].textContent = cliente.nome;
+                botao.children[1].textContent = cliente.telefone || '';
+                botao.addEventListener('click', function () {
+                    escolherCliente(cliente);
+                });
+                resultadosCliente.appendChild(botao);
+            }
+        });
+
+        // ===== busca de produto =====
 
         // busca enquanto digita, a partir de 2 letras
         buscaProduto.addEventListener('input', async function () {

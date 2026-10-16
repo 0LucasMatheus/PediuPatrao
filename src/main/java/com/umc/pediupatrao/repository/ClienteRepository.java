@@ -6,4 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface ClienteRepository extends MongoRepository<Cliente, String> {
     List<Cliente> findByTelefone(String telefone);
+
+    // igual o de produto, 10 primeiros com o nome contendo o texto
+    List<Cliente> findTop10ByNomeContainingIgnoreCase(String nome);
 }

@@ -21,6 +21,12 @@ public class ClienteController {
         return clienteService.listarClientes();
     }
 
+    // busca pro novo pedido, ex: /api/clientes/busca?nome=joao
+    @GetMapping("/busca")
+    public List<Cliente> buscarPorNome(@RequestParam String nome) {
+        return clienteService.buscarPorNome(nome);
+    }
+
     @PreAuthorize("hasRole('GERENTE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluirCliente(@PathVariable String id) {

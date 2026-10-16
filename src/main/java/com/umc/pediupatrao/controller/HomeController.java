@@ -139,7 +139,6 @@ public class HomeController {
     @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
     @GetMapping("/pedidos/novo")
     public String novoPedidoForm(Model model) {
-        model.addAttribute("clientes", clienteService.listarClientes());
         model.addAttribute("content", "pedidos/form :: content");
         return "layout";
     }

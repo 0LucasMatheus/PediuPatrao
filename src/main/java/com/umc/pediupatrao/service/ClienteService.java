@@ -22,6 +22,11 @@ public class ClienteService {
         clienteRepository.deleteById(id);
     }
 
+    // usado na busca de cliente do novo pedido
+    public List<Cliente> buscarPorNome(String nome) {
+        return clienteRepository.findTop10ByNomeContainingIgnoreCase(nome);
+    }
+
     public Optional<Cliente> buscarPorId(String id) {
         return clienteRepository.findById(id);
     }

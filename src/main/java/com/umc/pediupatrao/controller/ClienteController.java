@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/clientes")
@@ -20,18 +21,21 @@ public class ClienteController {
         return clienteService.listarClientes();
     }
 
+    @PreAuthorize("hasRole('GERENTE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluirCliente(@PathVariable String id) {
         clienteService.excluir(id);
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
     @PostMapping
     public ResponseEntity<Cliente> salvarCliente(@RequestBody Cliente cliente) {
         Cliente salvo = clienteService.salvar(cliente);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
+    @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> atualizarCliente(@PathVariable String id, @RequestBody Cliente cliente) {
         cliente.setId(id);

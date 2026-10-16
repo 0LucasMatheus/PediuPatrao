@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import com.umc.pediupatrao.dto.ItemPedidoRequest;
 import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Cliente;
+import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.service.AuditoriaService;
@@ -205,15 +206,16 @@ public class HomeController {
     @GetMapping("/pedidos/{id}")
     public String detalhePedido(@PathVariable String id, Model model,
             RedirectAttributes redirectAttributes) {
-        boolean encontrado = pedidoService.buscarPorId(id).map(p -> {
-            model.addAttribute("pedido", p);
-            return true;
-        }).orElse(false);
-
-        if (!encontrado) {
+        Pedido pedido = pedidoService.buscarPorId(id).orElse(null);
+        if (pedido == null) {
             redirectAttributes.addFlashAttribute("erro", "Pedido não encontrado.");
             return "redirect:/pedidos";
         }
+
+        model.addAttribute("pedido", pedido);
+
+        // busca o cliente pra mostrar telefone e endereco, se foi excluido vem null
+        model.addAttribute("cliente", clienteService.buscarPorId(pedido.getClienteId()).orElse(null));
 
         model.addAttribute("content", "pedidos/detalhe :: content");
         return "layout";

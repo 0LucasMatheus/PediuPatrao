@@ -30,6 +30,28 @@
                 <div class="card-body">
                     <p class="mb-2"><strong>Cliente:</strong> <span th:text="${pedido.clienteNome}"></span></p>
 
+                    <!-- dados do cliente, so aparece se ele ainda existe -->
+                    <th:block th:if="${cliente != null}">
+                        <p class="mb-2">
+                            <strong>Telefone:</strong> <span th:text="${cliente.telefone} ?: '—'"></span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Endereço:</strong>
+                            <span th:text="${cliente.logradouro}"></span>,
+                            <span th:text="${cliente.numero}"></span>
+                            <span th:if="${cliente.complemento != null and !cliente.complemento.isBlank()}"
+                                  th:text="' - ' + ${cliente.complemento}"></span>
+                            <br>
+                            <span th:text="${cliente.bairro}"></span> -
+                            <span th:text="${cliente.cidade}"></span>/<span th:text="${cliente.estado}"></span>
+                            <br>
+                            <span class="text-muted">CEP</span> <span th:text="${cliente.cep}"></span>
+                        </p>
+                    </th:block>
+                    <p class="mb-2 text-muted small" th:if="${cliente == null}">Cliente não está mais cadastrado.</p>
+
+                    <hr>
+
                     <p class="mb-2">
                         <strong>Entrada:</strong>
                         <span th:text="${#temporals.format(pedido.dataHoraEntrada, 'dd/MM/yyyy HH:mm')}"></span>

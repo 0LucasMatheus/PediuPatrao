@@ -11,9 +11,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.bson.Document;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,14 +29,42 @@ public class AuditoriaService {
     // campos que nunca vao pro log
     private static final List<String> CAMPOS_IGNORADOS = List.of("_id", "_class", "password", "senha");
 
-    private final AuditoriaRepository auditoriaRepository;
+    private static final int TAMANHO_PAGINA = 20;
 
-    public AuditoriaService(AuditoriaRepository auditoriaRepository) {
+    private final AuditoriaRepository auditoriaRepository;
+    private final MongoTemplate mongoTemplate;
+
+    public AuditoriaService(AuditoriaRepository auditoriaRepository, MongoTemplate mongoTemplate) {
         this.auditoriaRepository = auditoriaRepository;
+        this.mongoTemplate = mongoTemplate;
     }
 
-    public Page<Auditoria> listar(Pageable pageable) {
-        return auditoriaRepository.findAll(pageable);
+    // monta a busca so com os filtros que vieram preenchidos
+    public Page<Auditoria> buscar(String usuario, String entidade, String acao, String campo, int pagina) {
+        Query query = new Query();
+
+        if (usuario != null && !usuario.isBlank()) {
+            query.addCriteria(Criteria.where("usuario").regex(Pattern.quote(usuario), "i"));
+        }
+        if (entidade != null && !entidade.isBlank()) {
+            query.addCriteria(Criteria.where("entidade").is(entidade));
+        }
+        if (acao != null && !acao.isBlank()) {
+            query.addCriteria(Criteria.where("acao").is(acao));
+        }
+        if (campo != null && !campo.isBlank()) {
+            // procura o campo dentro da lista de alteracoes tipo ILIKE
+            query.addCriteria(Criteria.where("alteracoes.campo").regex(Pattern.quote(campo), "i"));
+        }
+
+        long total = mongoTemplate.count(query, Auditoria.class);
+
+        // mais novos primeiro
+        Pageable paginacao = PageRequest.of(pagina, TAMANHO_PAGINA, Sort.by("dataHora").descending());
+        query.with(paginacao);
+        List<Auditoria> registros = mongoTemplate.find(query, Auditoria.class);
+
+        return new PageImpl<>(registros, paginacao, total);
     }
 
     // chamado pelo listener, antigo e novo sao o documento do mongo inteiro

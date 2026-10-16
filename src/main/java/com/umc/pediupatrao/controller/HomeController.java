@@ -6,6 +6,7 @@ import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
+import com.umc.pediupatrao.service.AuditoriaService;
 import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
@@ -40,6 +42,9 @@ public class HomeController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private AuditoriaService auditoriaService;
 
     // ========================
     // LOGIN E HOME
@@ -262,6 +267,33 @@ public class HomeController {
         clienteService.excluir(id);
         redirectAttributes.addFlashAttribute("sucesso", "Cliente removido com sucesso!");
         return "redirect:/clientes";
+    }
+
+    // ========================
+    // AUDITORIA
+    // ========================
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    @GetMapping("/auditoria")
+    public String auditoria(@RequestParam(required = false) String usuario,
+            @RequestParam(required = false) String entidade,
+            @RequestParam(required = false) String acao,
+            @RequestParam(required = false) String campo,
+            @RequestParam(defaultValue = "0") int pagina,
+            Model model) {
+        if (pagina < 0) {
+            pagina = 0;
+        }
+
+        model.addAttribute("registros", auditoriaService.buscar(usuario, entidade, acao, campo, pagina));
+
+        // devolve os filtros pra tela continuar preenchida
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("entidade", entidade);
+        model.addAttribute("acao", acao);
+        model.addAttribute("campo", campo);
+
+        model.addAttribute("content", "auditoria/lista :: content");
+        return "layout";
     }
 
     // ========================

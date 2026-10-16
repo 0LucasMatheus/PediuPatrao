@@ -464,33 +464,6 @@ public class HomeController {
     }
 
     // ========================
-    // FUNCIONÁRIOS
-    // ========================
-    @GetMapping("/funcionarios")
-    public String funcionarios(Model model) {
-        model.addAttribute("content", "funcionarios/lista :: content");
-        return "layout";
-    }
-
-    // ========================
-    // ENTREGADORES
-    // ========================
-    @GetMapping("/entregadores")
-    public String entregadores(Model model) {
-        model.addAttribute("content", "entregadores/lista :: content");
-        return "layout";
-    }
-
-    // ========================
-    // HORÁRIOS
-    // ========================
-    @GetMapping("/horarios")
-    public String horarios(Model model) {
-        model.addAttribute("content", "horarios/lista :: content");
-        return "layout";
-    }
-
-    // ========================
     // ERROS
     // ========================
     // quando o service barra alguma coisa volta pra tela anterior com a mensagem

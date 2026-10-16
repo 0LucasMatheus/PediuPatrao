@@ -23,15 +23,6 @@ body {
     color: white;
 }
 
-#sidebar .nav-item .submenu {
-    display: none;
-    padding-left: 1.5rem;
-}
-
-#sidebar .nav-item.open .submenu {
-    display: block;
-}
-
 #content {
     flex-grow: 1;
     padding: 20px;

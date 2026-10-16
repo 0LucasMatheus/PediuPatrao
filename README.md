@@ -54,7 +54,6 @@ Esse projeto é a evolução do sistema base da **Atividade Prática M1 de Engen
 - [x] Busca, filtros, ordenação e paginação em todas as listas
 - [x] Lista de pedidos mostra os pedidos do dia por padrão
 - [x] Tela de detalhe do pedido
-- [ ] Telas de funcionários, entregadores e horário de funcionamento
 
 ---
 

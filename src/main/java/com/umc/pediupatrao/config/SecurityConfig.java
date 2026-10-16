@@ -56,7 +56,6 @@ public class SecurityConfig {
 
                         // so admin mexe em usuario
                         .requestMatchers("/usuarios/**", "/api/usuarios/**").hasRole("ADMIN")
-                        .requestMatchers("/funcionarios", "/entregadores", "/horarios").hasAnyRole("ADMIN", "GERENTE")
 
                         // o resto precisa ta logado, as regras de cada acao tao nos services
                         .anyRequest().authenticated()

@@ -40,8 +40,8 @@
                     <tr th:each="produto : ${produtos}">
                         <td class="ps-4 fw-medium" th:text="${produto.nome}"></td>
                         <td th:text="${produto.tipo}"></td>
-                        <!-- preco no formato br -->
-                        <td th:text="${produto.preco != null} ? 'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')} : '—'"></td>
+                        <!-- preco ta em centavos, divide por 100 pra mostrar -->
+                        <td th:text="${produto.preco != null} ? 'R$ ' + ${#numbers.formatDecimal(produto.preco / 100.0, 1, 'POINT', 2, 'COMMA')} : '—'"></td>
                         <td>
                             <!-- ativo pode vir null -->
                             <span class="badge"

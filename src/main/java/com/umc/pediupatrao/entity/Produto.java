@@ -14,6 +14,6 @@ public class Produto {
     private String id;
     private String nome;
     private String tipo; // Pizza, Esfiha, Bebida, Lanche
-    private Double preco;
+    private Integer preco; // em centavos, 4990 = R$ 49,90
     private Boolean ativo;
 }

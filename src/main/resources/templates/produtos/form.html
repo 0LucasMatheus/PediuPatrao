@@ -45,9 +45,11 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="preco" class="form-label fw-medium">Preço (R$)</label>
-                    <input type="number" id="preco" class="form-control" th:field="*{preco}"
-                           step="0.01" min="0.01" placeholder="Ex: 49.90" required/>
+                    <label for="precoTela" class="form-label fw-medium">Preço</label>
+                    <!-- oq vai pro servidor e o hidden em centavos -->
+                    <input type="text" id="precoTela" class="form-control" placeholder="R$ 0,00"
+                           inputmode="numeric" required/>
+                    <input type="hidden" id="preco" th:field="*{preco}"/>
                 </div>
 
                 <!-- desmarcado manda false -->
@@ -67,6 +69,29 @@
             </form>
         </div>
     </div>
+
+    <script>
+        const precoTela = document.getElementById('precoTela');
+        const preco = document.getElementById('preco');
+
+        // 4990 vira R$ 49,90
+        function formatarCentavos(centavos) {
+            const reais = (centavos / 100).toFixed(2).replace('.', ',');
+            return 'R$ ' + reais;
+        }
+
+        // mascara de preco, so pega os numeros digitados
+        precoTela.addEventListener('input', function () {
+            const numeros = this.value.replace(/\D/g, '');
+            preco.value = numeros;
+            this.value = numeros ? formatarCentavos(numeros) : '';
+        });
+
+        // quando ta editando ja mostra o preco que tava salvo
+        if (preco.value) {
+            precoTela.value = formatarCentavos(preco.value);
+        }
+    </script>
 
 </div>
 

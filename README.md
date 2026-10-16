@@ -1,90 +1,115 @@
 <h1 align="center"> 
-	🍃 Javacamus - Sistema base com SpringBoot 🍃
+	🍕 PediuPatrão - Sistema de pedidos de pizzaria 🍕
 </h1>
 
 
 ---
 
-## 🌳 Sobre o projeto
+## 🍕 Sobre o projeto
 
-Javacamus é um sistema generico que serve de base para outros construído com **Java + Spring Boot**, **Thymeleaf** e **MongoDB Atlas**. O objetivo é entregar um **template genérico de autenticação e autorização**, pronto para ser usado como base de outros projetos.
+PediuPatrão é um sistema de pedidos para pizzaria feito com **Java + Spring Boot**, **Thymeleaf** e **MongoDB Atlas**, usado para cadastrar clientes, gerenciar produtos e registrar pedidos.
 
-O sistema cobre o ciclo completo de gerenciamento de usuários: cadastro (restrito a administradores), login, logout, recuperação de senha e controle de acesso por perfil (role) usando **Spring Security** para toda a parte de autenticação/autorização e **MongoDB Atlas** como banco de dados.
-
-A interface com Thymeleaf foi montada em cima de um layout único (`layout.html`) com fragments reaproveitáveis (sidebar, conteúdo), o que permite trocar o tema visual sem mexer em muitos arquivos.
+Esse projeto é a evolução do sistema base da **Atividade Prática M1 de Engenharia de Software**. A pizzaria cresceu e precisou separar a responsabilidade de cada funcionário, controlar a entrada e a saída dos pedidos e saber quem alterou o que nas informações de clientes e pedidos. Pra isso foram adicionados três perfis de acesso com as regras no backend, um fluxo de status obrigatório pros pedidos, cancelamento e desconto exclusivos do gerente e uma auditoria de todas as alterações.
 
 ---
 
+## 🧀 Funcionalidades
 
-## 🛡️ Perfis de acesso (Roles)
+#### RF01 — Usuários e permissões
+- [x] Três perfis de acesso: `ADMIN`, `GERENTE` e `ATENDENTE`
+- [x] Login usa o perfil real do usuário salvo no banco
+- [x] Os três usuários iniciais são criados pelo `.env` na primeira execução
+- [x] Autorização no backend com `@PreAuthorize` em cada endpoint de tela e de API, esconder botão é só visual
+- [x] Ninguém altera o próprio perfil nem exclui o próprio usuário (proteção contra autoelevação)
+- [x] API de usuários não devolve a senha
+- [x] CSRF ligado em todos os formulários e operações sensíveis
 
-O sistema vem com 3 perfis genéricos, pensados para servir de ponto de partida para qualquer domínio de aplicação:
+#### RF02 — Cadastro de pedidos
+- [x] Pedido com itens, quantidades, preços, desconto, valor total, responsável e data/hora de entrada
+- [x] Valor total calculado no servidor com o preço do banco, a requisição não consegue definir o total
+- [x] Preço do produto fica congelado no item, se o produto mudar de preço o pedido antigo não muda
+- [x] Todos os valores em centavos (`int`) pra não ter erro de conta
+- [x] Tela de novo pedido com busca de cliente e de produto pelo nome
 
-| Perfil       | Pode acessar                                                                 |
-|--------------|-------------------------------------------------------------------------------|
-| `ADMIN`      | Tudo: área administrativa (`/admin/**`), moderação (`/moderator/**`), área comum (`/usuario/**`) e a API REST (`/api/usuarios`) |
-| `MODERATOR`  | Moderação (`/moderator/**`) e área comum (`/usuario/**`)                     |
-| `USER`       | Apenas a área comum (`/usuario/**`)                                          |
+#### RF03 — Entrada, saída e transições
+- [x] Fluxo obrigatório: `RECEBIDO → EM_PREPARACAO → PRONTO → SAIU_PARA_ENTREGA / RETIRADO → FINALIZADO`
+- [x] Transições inválidas bloqueadas no service (ex: finalizar um pedido em preparação)
+- [x] Saída registra data/hora e responsável obrigatoriamente
+- [x] Voltar um status só antes da saída, pra corrigir clique errado
+- [x] Pedido cancelado ou finalizado não muda mais
 
-A autorização é configurada centralmente em `SecurityConfig` (via `authorizeHttpRequests`), e as telas (Thymeleaf) usam `sec:authorize` para exibir ou esconder menus e blocos de conteúdo conforme o perfil do usuário logado. Quem tenta acessar uma rota sem permissão cai na página `/acesso-negado` (HTTP 403).
+#### RF04 — Cancelamento e desconto
+- [x] Só o `GERENTE` cancela e dá desconto, nem o `ADMIN` consegue
+- [x] Cancelamento exige justificativa, só antes da saída, guarda quem e quando e não apaga nada
+- [x] Desconto percentual de 1% a 20%, só antes da saída, aplicar de novo substitui e não soma
 
-Para adaptar os perfis ao tema do seu projeto, basta:
-1. Alterar os valores do enum `Role` (`src/main/java/com/umc/javacamus/entity/Role.java`);
-2. Ajustar os `requestMatchers(...).hasRole(...)` em `SecurityConfig`;
-3. Ajustar os `sec:authorize` nas views (`sidebar.html`, `home.html`, etc).
+#### RF05 — Auditoria
+- [x] Auditoria persistente no MongoDB de inclusões, alterações e exclusões de clientes e pedidos
+- [x] Guarda usuário, perfil, data/hora, ação, entidade, id e os campos alterados com valor anterior e novo
+- [x] Justificativa do cancelamento vai junto no registro
+- [x] Consulta só para `ADMIN` e `GERENTE`, sem editar ou excluir
+- [x] Senha nunca vai pro log e telefone aparece mascarado
 
-E começar a fazer suas própias telas novas seguindo a estrutura definida.
+#### Extras
+- [x] Busca, filtros, ordenação e paginação em todas as listas
+- [x] Lista de pedidos mostra os pedidos do dia por padrão
+- [x] Tela de detalhe do pedido
+- [ ] Telas de funcionários, entregadores e horário de funcionamento
 
 ---
 
-## 🍃 MongoDB Atlas
+## 🛡️ Perfis de acesso
 
-O projeto usa **Spring Data MongoDB** para persistir os usuários em um cluster do **MongoDB Atlas** (serviço de banco de dados gerenciado na nuvem).
+| Ação | ADMIN | GERENTE | ATENDENTE |
+|---|:-:|:-:|:-:|
+| Usuários (criar, editar, perfis) | ✅ | ❌ | ❌ |
+| Clientes: consultar | ✅ | ✅ | ✅ |
+| Clientes: criar / editar | ❌ | ✅ | ✅ |
+| Clientes: excluir | ❌ | ✅ | ❌ |
+| Produtos: consultar | ✅ | ✅ | ✅ |
+| Produtos: criar / editar / excluir | ✅ | ✅ | ❌ |
+| Pedidos: consultar | ✅ | ✅ | ✅ |
+| Pedidos: registrar e mudar status | ❌ | ✅ | ✅ |
+| Pedidos: cancelar e dar desconto | ❌ | ✅ | ❌ |
+| Auditoria | ✅ | ✅ | ❌ |
 
-### Como a conexão é feita
+A proteção é feita em duas partes:
+1. `SecurityConfig` — exige login em tudo e bloqueia áreas inteiras, tipo `/usuarios/**` só pra `ADMIN`;
+2. `@PreAuthorize` em cada endpoint, tanto das telas (`HomeController`) quanto da API (`/api/...`).
 
-A string de conexão é lida de uma variável de ambiente (`MONGODB_URI`) dentro de `application.properties`:
+Quem tenta acessar sem permissão recebe **403**, mesmo chamando a API direto sem passar pela tela. API sem login responde **401**.
 
-```properties
-spring.data.mongodb.uri=${MONGODB_URI}
-spring.data.mongodb.database=${MONGODB_DATABASE}
-spring.data.mongodb.auto-index-creation=true
-```
+---
 
-O valor real de `MONGODB_URI` fica em um arquivo `.env` não versionado por segurança.
+## 🍅 Auditoria
 
-```
-MONGODB_URI=mongodb+srv://usuario:senha@cluster0.xxxxx.mongodb.net/?appName=Cluster0
-MONGODB_DATABASE=javacamus
-```
+A auditoria funciona igual a um trigger de banco. O `AuditoriaListener` é um listener de eventos do Spring Data MongoDB que roda sozinho antes de todo `save` e `delete` nas collections `clientes` e `pedidos`:
 
-### Como criar seu próprio cluster no Atlas
+- **sem id** → é uma inclusão;
+- **com id** → busca como o documento tá no banco, compara com o novo e é uma alteração;
+- **delete** → busca o que vai ser apagado e é uma exclusão.
 
-1. Crie uma conta gratuita em [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas).
-2. Crie um cluster (o tier gratuito M0 é suficiente).
-3. Em **Database Access**, crie um usuário de banco com senha.
-4. Em **Network Access**, libere o IP da sua máquina (ou `0.0.0.0/0` apenas para desenvolvimento).
-5. Em **Connect → Drivers**, copie a connection string (`mongodb+srv://...`) e cole em `MONGODB_URI` no seu `.env`.
+Só os campos que mudaram são guardados. Mudança de status, desconto e cancelamento entram como alteração de pedido, mostrando os campos `status`, `descontoPercentual`, `valorTotal`, etc.
 
-### O que é armazenado
-
-Toda a persistência do sistema gira em torno de uma única coleção, `usuarios`, com documentos no formato:
+Exemplo de registro na collection `auditoria`:
 
 ```json
 {
-  "_id": "ObjectId(...)",
-  "username": "admin",
-  "email": "admin@exemplo.com",
-  "password": "$2a$10$... (hash BCrypt, nunca texto puro)",
-  "role": "ADMIN",
-  "resetCode": null,
-  "resetCodeExpiresAt": null
+  "usuario": "atendente",
+  "perfil": "ATENDENTE",
+  "acao": "ALTERACAO",
+  "entidade": "clientes",
+  "entidadeId": "6710f3...",
+  "alteracoes": [
+    { "campo": "logradouro", "valorAnterior": "Rua das Flores", "valorNovo": "Av. Brasil" },
+    { "campo": "telefone", "valorAnterior": "*****-1234", "valorNovo": "*****-5678" }
+  ],
+  "justificativa": null,
+  "dataHora": "2026-09-23T14:35:00"
 }
 ```
 
-`resetCode` e `resetCodeExpiresAt` só são preenchidos durante uma solicitação de recuperação de senha, e são limpos assim que a senha é redefinida ou quando o código expira.
-
-A coleção `usuarios` é criada automaticamente na primeira execução por `MongoInitConfig`, e o índice único de `username` é criado automaticamente pelo Spring Data (`auto-index-creation=true`), evitando usernames duplicados.
+O `AuditoriaRepository` estende o `Repository` vazio do Spring e só declara o `save`, então não existe update nem delete de auditoria pela aplicação.
 
 ---
 
@@ -92,14 +117,13 @@ A coleção `usuarios` é criada automaticamente na primeira execução por `Mon
 
 ---
 
-## 🦈 Como executar o projeto
+## 🧑‍🍳 Como executar o projeto
 
 ### Pré-requisitos
 
 - [Git](https://git-scm.com)
 - [Nix + devenv](https://devenv.sh/getting-started/) (gerencia o JDK 21 e o Maven automaticamente)
 - Uma conta no [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (gratuita) com um cluster criado
-- Uma conta de e-mail com senha de app habilitada, para o envio do código de recuperação de senha
 
 ---
 
@@ -107,8 +131,8 @@ A coleção `usuarios` é criada automaticamente na primeira execução por `Mon
 
 **2 - Clonar o projeto e entrar na pasta**
 ```bash
-git clone https://github.com/SEU_USUARIO/javacamus.git
-cd javacamus
+git clone https://github.com/0LucasMatheus/PediuPatrao.git
+cd PediuPatrao
 ```
 
 **3 - Entrar no ambiente**
@@ -124,24 +148,38 @@ cp .env.example .env
 # preencha com os valores reais
 ```
 
-**5 - Subir a aplicação**
-```bash
-devenv up
-```
-O processo `app` já sobe o Spring Boot (via Maven) na porta `8080`, lendo as variáveis do `.env`.
+| Variável | Pra que serve |
+|---|---|
+| `MONGODB_URI` | string de conexão do MongoDB Atlas |
+| `MONGODB_DATABASE` | nome do banco (padrão `pediupatrao`) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | usuário ADMIN criado na primeira execução |
+| `GERENTE_USERNAME` / `GERENTE_PASSWORD` | usuário GERENTE criado na primeira execução |
+| `ATENDENTE_USERNAME` / `ATENDENTE_PASSWORD` | usuário ATENDENTE criado na primeira execução |
 
-Alternativamente, dentro do `devenv shell`, dá pra rodar manualmente:
+**5 - Subir a aplicação**
 ```bash
 mvn spring-boot:run
 ```
 
 **6 - Acessar o projeto**
 - Aplicação: http://localhost:8080/login
-- Usuário ADMIN padrão: o que você definiu em `ADMIN_USERNAME` / `ADMIN_PASSWORD` no `.env` (criado automaticamente na primeira execução, caso ainda não exista)
+- Usuários: os três definidos no `.env`, criados automaticamente na primeira execução caso ainda não existam
 
 ---
 
-## 🧩 Decisões de design
+## 🌶️ Principais alterações
+
+Em relação ao projeto base:
+
+- Credenciais tiradas do `application.properties` e movidas pro `.env`
+- Telas que estavam quebradas arrumadas (produtos, sidebar) e páginas de exemplo sem uso removidas
+- Entidades com Lombok e dependência de JPA (`@Entity`) removida, já que o banco é Mongo
+- `UsuarioDetailsService` usando o perfil do usuário em vez de `USER` fixo
+- `SecurityConfig` reescrito com CSRF ligado, rotas por perfil e `@EnableMethodSecurity`
+- Modelo de `Pedido` refeito (itens, valores, entrada, saída, cancelamento) e `PedidoService` com as regras de negócio
+- Estrutura nova de auditoria: `Auditoria`, `CampoAlterado`, `AcaoAuditoria`, `AuditoriaRepository`, `AuditoriaService` e `AuditoriaListener`
+- Busca, filtros, ordenação e paginação em pedidos, clientes, produtos, usuários e auditoria
+- Tratamento de erros: na API volta JSON com 400/404, nas telas volta pra página anterior com a mensagem
 
 ---
 
@@ -150,13 +188,13 @@ mvn spring-boot:run
 As seguintes ferramentas estão sendo usadas na construção do projeto:
 
 #### **Ambiente de desenvolvimento**
-- **[devenv](https://devenv.sh)** (Nix) — JDK 21 e Maven gerenciados automaticamente, com processo dedicado para subir a aplicação
+- **[devenv](https://devenv.sh)** (Nix) — JDK 21 e Maven gerenciados automaticamente
 
 #### **Back-End**
 - [Java 21](https://www.oracle.com/java/) + [Spring Boot 3](https://spring.io/projects/spring-boot)
 - [Spring Security](https://spring.io/projects/spring-security) — autenticação e autorização
 - [Spring Data MongoDB](https://spring.io/projects/spring-data-mongodb) — persistência no MongoDB Atlas
-- [Spring Mail](https://docs.spring.io/spring-framework/reference/integration/email.html) — envio do código de recuperação de senha por e-mail
+- [Lombok](https://projectlombok.org/)
 
 #### **Front-End**
 - [Thymeleaf](https://www.thymeleaf.org/) + [thymeleaf-extras-springsecurity6](https://github.com/thymeleaf/thymeleaf-extras-springsecurity) (`sec:authorize` nas views)

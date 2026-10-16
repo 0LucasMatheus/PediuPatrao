@@ -255,6 +255,15 @@ public class HomeController {
         return "redirect:/clientes";
     }
 
+    @PreAuthorize("hasRole('GERENTE')")
+    @PostMapping("/clientes/excluir/{id}")
+    public String excluirCliente(@PathVariable String id,
+            RedirectAttributes redirectAttributes) {
+        clienteService.excluir(id);
+        redirectAttributes.addFlashAttribute("sucesso", "Cliente removido com sucesso!");
+        return "redirect:/clientes";
+    }
+
     // ========================
     // FUNCIONÁRIOS
     // ========================

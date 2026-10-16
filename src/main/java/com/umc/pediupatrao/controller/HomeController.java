@@ -189,6 +189,46 @@ public class HomeController {
         return "redirect:/pedidos";
     }
 
+    // detalhe do pedido, todo mundo logado pode ver
+    @GetMapping("/pedidos/{id}")
+    public String detalhePedido(@PathVariable String id, Model model,
+            RedirectAttributes redirectAttributes) {
+        boolean encontrado = pedidoService.buscarPorId(id).map(p -> {
+            model.addAttribute("pedido", p);
+            return true;
+        }).orElse(false);
+
+        if (!encontrado) {
+            redirectAttributes.addFlashAttribute("erro", "Pedido não encontrado.");
+            return "redirect:/pedidos";
+        }
+
+        model.addAttribute("content", "pedidos/detalhe :: content");
+        return "layout";
+    }
+
+    // so gerente, nem o admin pode
+    @PreAuthorize("hasRole('GERENTE')")
+    @PostMapping("/pedidos/{id}/cancelar")
+    public String cancelarPedido(@PathVariable String id,
+            @RequestParam String justificativa,
+            RedirectAttributes redirectAttributes) {
+        pedidoService.cancelar(id, justificativa);
+        redirectAttributes.addFlashAttribute("sucesso", "Pedido cancelado.");
+        return "redirect:/pedidos/" + id;
+    }
+
+    // so gerente, nem o admin pode
+    @PreAuthorize("hasRole('GERENTE')")
+    @PostMapping("/pedidos/{id}/desconto")
+    public String descontoPedido(@PathVariable String id,
+            @RequestParam int percentual,
+            RedirectAttributes redirectAttributes) {
+        pedidoService.aplicarDesconto(id, percentual);
+        redirectAttributes.addFlashAttribute("sucesso", "Desconto de " + percentual + "% aplicado.");
+        return "redirect:/pedidos/" + id;
+    }
+
     // botoes de avancar status na lista
     @PreAuthorize("hasAnyRole('GERENTE', 'ATENDENTE')")
     @PostMapping("/pedidos/{id}/status")

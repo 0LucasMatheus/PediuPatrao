@@ -111,6 +111,9 @@
                             </div>
                         </td>
                         <td class="text-end pe-4">
+                            <a th:href="@{/pedidos/{id}(id=${pedido.id})}" class="btn btn-sm btn-outline-dark mb-1" title="Ver pedido">
+                                <i class="bi bi-eye"></i>
+                            </a>
                             <!-- um botao pra cada proximo status permitido -->
                             <th:block sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')">
                                 <!-- voltar so aparece se o status permite -->

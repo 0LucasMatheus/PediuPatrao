@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -103,6 +104,10 @@ public class PedidoService {
 
     public List<Pedido> listarPedidos() {
         return pedidoRepository.findAll();
+    }
+
+    public Optional<Pedido> buscarPorId(String id) {
+        return pedidoRepository.findById(id);
     }
 
     // lista da tela, com busca, filtro, ordenacao e paginacao

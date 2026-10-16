@@ -15,7 +15,7 @@ Esse projeto é a evolução do sistema base da **Atividade Prática M1 de Engen
 
 ## 🧀 Funcionalidades
 
-#### RF01 — Usuários e permissões
+#### RF01 — Controle de usuários e permissões
 - [x] Três perfis de acesso: `ADMIN`, `GERENTE` e `ATENDENTE`
 - [x] Login usa o perfil real do usuário salvo no banco
 - [x] Os três usuários iniciais são criados pelo `.env` na primeira execução
@@ -24,26 +24,26 @@ Esse projeto é a evolução do sistema base da **Atividade Prática M1 de Engen
 - [x] API de usuários não devolve a senha
 - [x] CSRF ligado em todos os formulários e operações sensíveis
 
-#### RF02 — Cadastro de pedidos
+#### RF02 — Evolução do cadastro de pedidos
 - [x] Pedido com itens, quantidades, preços, desconto, valor total, responsável e data/hora de entrada
 - [x] Valor total calculado no servidor com o preço do banco, a requisição não consegue definir o total
 - [x] Preço do produto fica congelado no item, se o produto mudar de preço o pedido antigo não muda
 - [x] Todos os valores em centavos (`int`) pra não ter erro de conta
 - [x] Tela de novo pedido com busca de cliente e de produto pelo nome
 
-#### RF03 — Entrada, saída e transições
+#### RF03 — Controle de entrada, saída e transições dos pedidos
 - [x] Fluxo obrigatório: `RECEBIDO → EM_PREPARACAO → PRONTO → SAIU_PARA_ENTREGA / RETIRADO → FINALIZADO`
 - [x] Transições inválidas bloqueadas no service (ex: finalizar um pedido em preparação)
 - [x] Saída registra data/hora e responsável obrigatoriamente
 - [x] Voltar um status só antes da saída, pra corrigir clique errado
 - [x] Pedido cancelado ou finalizado não muda mais
 
-#### RF04 — Cancelamento e desconto
+#### RF04 — Cancelamentos e descontos
 - [x] Só o `GERENTE` cancela e dá desconto, nem o `ADMIN` consegue
 - [x] Cancelamento exige justificativa, só antes da saída, guarda quem e quando e não apaga nada
 - [x] Desconto percentual de 1% a 20%, só antes da saída, aplicar de novo substitui e não soma
 
-#### RF05 — Auditoria
+#### RF05 — Auditoria das alterações de pedidos e clientes
 - [x] Auditoria persistente no MongoDB de inclusões, alterações e exclusões de clientes e pedidos
 - [x] Guarda usuário, perfil, data/hora, ação, entidade, id e os campos alterados com valor anterior e novo
 - [x] Justificativa do cancelamento vai junto no registro
@@ -113,6 +113,19 @@ O `AuditoriaRepository` estende o `Repository` vazio do Spring e só declara o `
 ---
 
 ## 🖼️ Layout
+<br> tela de novo pedido <br>
+<img width="1393" height="750" alt="image" src="https://github.com/user-attachments/assets/a09ce273-1776-41d6-99ee-7fe9f5602783" />
+
+<br> tela de listagem de pedidos <br>
+<img width="1622" height="1098" alt="image" src="https://github.com/user-attachments/assets/fd9c9293-ecf7-4de2-b730-7a0f0478b600" />
+
+<br> usuarios do sistema <br>
+<img width="1627" height="1081" alt="image" src="https://github.com/user-attachments/assets/8d44da76-9969-4905-bcb1-8c8af7a7a49b" />
+
+<br> auditoria <br>
+<img width="1627" height="1088" alt="image" src="https://github.com/user-attachments/assets/1bd17514-1df2-4414-94b7-b69340ddf89d" />
+
+
 
 ---
 

@@ -15,7 +15,7 @@
 
     <form id="filtros" th:action="@{/auditoria}" method="get" class="card card-body shadow-sm mb-3">
         <div class="row g-2 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small">Usuário</label>
                 <input type="text" name="usuario" class="form-control form-control-sm"
                        th:value="${usuario}" placeholder="Ex: atendente">
@@ -37,10 +37,17 @@
                     <option value="EXCLUSAO" th:selected="${acao == 'EXCLUSAO'}">Exclusão</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small">Campo alterado</label>
                 <input type="text" name="campo" class="form-control form-control-sm"
-                       th:value="${campo}" placeholder="Ex: telefone, status">
+                       th:value="${campo}" placeholder="Ex: status">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Ordenar por</label>
+                <select name="ordem" class="form-select form-select-sm">
+                    <option value="recentes" th:selected="${ordem == 'recentes'}">Mais recentes</option>
+                    <option value="antigos" th:selected="${ordem == 'antigos'}">Mais antigos</option>
+                </select>
             </div>
             <div class="col-md-2 d-flex gap-1">
                 <button type="submit" class="btn btn-sm btn-primary w-100">

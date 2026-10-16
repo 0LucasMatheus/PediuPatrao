@@ -42,7 +42,7 @@ public class AuditoriaService {
     }
 
     // monta a busca so com os filtros que vieram preenchidos
-    public Page<Auditoria> buscar(String usuario, String entidade, String acao, String campo, int pagina) {
+    public Page<Auditoria> buscar(String usuario, String entidade, String acao, String campo, String ordem, int pagina) {
         Query query = new Query();
 
         if (usuario != null && !usuario.isBlank()) {
@@ -61,8 +61,13 @@ public class AuditoriaService {
 
         long total = mongoTemplate.count(query, Auditoria.class);
 
-        // mais novos primeiro
-        Pageable paginacao = PageRequest.of(pagina, TAMANHO_PAGINA, Sort.by("dataHora").descending());
+        // o padrao e mais novos primeiro
+        Sort ordenacao = Sort.by("dataHora").descending();
+        if ("antigos".equals(ordem)) {
+            ordenacao = Sort.by("dataHora").ascending();
+        }
+
+        Pageable paginacao = PageRequest.of(pagina, TAMANHO_PAGINA, ordenacao);
         query.with(paginacao);
         List<Auditoria> registros = mongoTemplate.find(query, Auditoria.class);
 

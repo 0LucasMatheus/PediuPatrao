@@ -443,13 +443,15 @@ public class HomeController {
             @RequestParam(required = false) String entidade,
             @RequestParam(required = false) String acao,
             @RequestParam(required = false) String campo,
+            @RequestParam(required = false) String ordem,
             @RequestParam(defaultValue = "0") int pagina,
             Model model) {
         if (pagina < 0) {
             pagina = 0;
         }
 
-        model.addAttribute("registros", auditoriaService.buscar(usuario, entidade, acao, campo, pagina));
+        model.addAttribute("registros", auditoriaService.buscar(usuario, entidade, acao, campo, ordem, pagina));
+        model.addAttribute("ordem", ordem);
 
         // devolve os filtros pra tela continuar preenchida
         model.addAttribute("usuario", usuario);

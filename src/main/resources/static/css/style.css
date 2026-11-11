@@ -11,6 +11,15 @@ body {
     background-color: #343a40;
     color: white;
     height: 100vh;
+    /* se a tela for baixa da pra rolar o menu */
+    overflow-y: auto;
+}
+
+/* o aside do layout que segura a sidebar, fica parado no topo mesmo descendo a pagina */
+aside {
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
 
 #sidebar a {

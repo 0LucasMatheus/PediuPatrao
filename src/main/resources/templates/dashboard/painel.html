@@ -19,16 +19,28 @@
 
     <form id="filtros" class="card card-body shadow-sm mb-3">
         <div class="row g-2 align-items-end">
-            <div class="col-md-2">
+            <div class="col-md-auto">
+                <label class="form-label small d-block">Período</label>
+                <!-- cada botao ja preenche as datas e atualiza, personalizado so mostra as datas -->
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-secondary" data-atalho="hoje">Hoje</button>
+                    <button type="button" class="btn btn-outline-secondary" data-atalho="7">7 dias</button>
+                    <button type="button" class="btn btn-outline-secondary" data-atalho="30">30 dias</button>
+                    <button type="button" class="btn btn-outline-secondary" data-atalho="mes">Mês atual</button>
+                    <button type="button" class="btn btn-outline-secondary" data-atalho="personalizado">Personalizado</button>
+                </div>
+            </div>
+            <!-- escondido ate clicar em personalizado -->
+            <div class="col-md-2 d-none" id="campoInicio">
                 <label class="form-label small">De</label>
                 <input type="date" id="inicio" class="form-control form-control-sm">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-2 d-none" id="campoFim">
                 <label class="form-label small">Até</label>
                 <input type="date" id="fim" class="form-control form-control-sm">
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-sm btn-primary w-100">
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-sm btn-primary">
                     <i class="bi bi-arrow-clockwise me-1"></i> Atualizar
                 </button>
             </div>
@@ -102,17 +114,73 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-3">
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold">Situação dos pedidos</h6>
+                    <div style="height: 280px">
+                        <canvas id="graficoStatus"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <!-- o tipo fica aqui pq so muda essa tabela -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0">Produtos mais vendidos</h6>
+                        <select id="tipo" class="form-select form-select-sm w-auto">
+                            <option value="">Todos os tipos</option>
+                            <option value="Pizza">Pizza</option>
+                            <option value="Esfiha">Esfiha</option>
+                            <option value="Lanche">Lanche</option>
+                            <option value="Bebida">Bebida</option>
+                            <option value="Porção">Porção</option>
+                            <option value="Adicional">Adicional</option>
+                        </select>
+                    </div>
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Produto</th>
+                                <th class="text-end">Quantidade</th>
+                                <th class="text-end">Faturamento</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         const inicio = document.getElementById('inicio');
         const fim = document.getElementById('fim');
         const erro = document.getElementById('erro');
+        const tipo = document.getElementById('tipo');
 
         const AZUL = '#2a78d6';
         const CINZA_GRADE = '#e9e8e4';
 
         let graficoVendas = null;
         let graficoHoras = null;
+        let graficoStatus = null;
+
+        // nome bonito de cada status pro grafico
+        const NOMES_STATUS = {
+            RECEBIDO: 'Recebido',
+            EM_PREPARACAO: 'Em preparação',
+            PRONTO: 'Pronto',
+            SAIU_PARA_ENTREGA: 'Saiu para entrega',
+            RETIRADO: 'Retirado',
+            FINALIZADO: 'Finalizado',
+            CANCELADO: 'Cancelado'
+        };
 
         // centavos pra R$
         function dinheiro(centavos) {
@@ -134,6 +202,54 @@
             return partes[2] + '/' + partes[1];
         }
 
+        // data do js pro formato do input, 2026-11-05
+        // n usa toISOString pq ele converte pra utc e pode mudar o dia
+        function formatarData(data) {
+            const ano = data.getFullYear();
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const dia = String(data.getDate()).padStart(2, '0');
+            return ano + '-' + mes + '-' + dia;
+        }
+
+        // pinta o botao escolhido e deixa os outros so com borda
+        function marcarBotao(atalho) {
+            for (const botao of document.querySelectorAll('[data-atalho]')) {
+                if (botao.dataset.atalho === atalho) {
+                    botao.className = 'btn btn-secondary';
+                } else {
+                    botao.className = 'btn btn-outline-secondary';
+                }
+            }
+        }
+
+        function aplicarAtalho(atalho) {
+            marcarBotao(atalho);
+
+            // personalizado so mostra as datas, atualiza quando clicar em atualizar
+            if (atalho === 'personalizado') {
+                document.getElementById('campoInicio').classList.remove('d-none');
+                document.getElementById('campoFim').classList.remove('d-none');
+                return;
+            }
+            document.getElementById('campoInicio').classList.add('d-none');
+            document.getElementById('campoFim').classList.add('d-none');
+
+            // os outros sempre terminam hoje
+            const hoje = new Date();
+            const comeco = new Date();
+            if (atalho === '7') {
+                comeco.setDate(hoje.getDate() - 6);
+            } else if (atalho === '30') {
+                comeco.setDate(hoje.getDate() - 29);
+            } else if (atalho === 'mes') {
+                comeco.setDate(1);
+            }
+            // hoje deixa o comeco igual a hoje
+            inicio.value = formatarData(comeco);
+            fim.value = formatarData(hoje);
+            atualizar();
+        }
+
         // quanto o faturamento subiu ou caiu em relacao ao periodo anterior
         function mostrarVariacao(atual, anterior) {
             const variacao = document.getElementById('variacao');
@@ -153,16 +269,8 @@
         }
 
         async function carregarResumo() {
-            erro.classList.add('d-none');
-
-            let url = '/api/dashboard/resumo';
-            // na primeira vez vai sem data e a api usa os ultimos 30 dias
-            if (inicio.value && fim.value) {
-                url += '?inicio=' + inicio.value + '&fim=' + fim.value;
-            }
-
             try {
-                const resposta = await fetch(url);
+                const resposta = await fetch(urlComPeriodo('/api/dashboard/resumo'));
                 const dados = await resposta.json();
 
                 // a api manda o motivo no campo erro, tipo data invalida
@@ -170,10 +278,6 @@
                     mostrarErro(dados.erro || 'Não foi possível carregar o dashboard.');
                     return false;
                 }
-
-                // preenche as datas com o periodo que a api usou
-                inicio.value = dados.inicio;
-                fim.value = dados.fim;
 
                 document.getElementById('faturamento').textContent = dinheiro(dados.faturamento);
                 mostrarVariacao(dados.faturamento, dados.faturamentoAnterior);
@@ -207,7 +311,7 @@
             const dias = [];
             const valores = [];
             for (const venda of vendas) {
-                dias.push(diaMes(venda.periodo));
+                dias.push(diaMes(venda.dia));
                 valores.push(venda.faturamento);
             }
 
@@ -308,7 +412,95 @@
             });
         }
 
-        // resumo primeiro pq ele preenche as datas, depois os graficos usam elas
+        async function carregarStatus() {
+            const resposta = await fetch(urlComPeriodo('/api/dashboard/status'));
+            if (!resposta.ok) {
+                mostrarErro('Não foi possível carregar a situação dos pedidos.');
+                return;
+            }
+            const lista = await resposta.json();
+
+            const nomes = [];
+            const quantidades = [];
+            for (const item of lista) {
+                nomes.push(NOMES_STATUS[item.status]);
+                quantidades.push(item.quantidade);
+            }
+
+            if (graficoStatus) {
+                graficoStatus.destroy();
+            }
+            graficoStatus = new Chart(document.getElementById('graficoStatus'), {
+                type: 'bar',
+                data: {
+                    labels: nomes,
+                    datasets: [{
+                        label: 'Pedidos',
+                        data: quantidades,
+                        backgroundColor: AZUL,
+                        maxBarThickness: 24,
+                        // barra deitada, arredonda so a ponta da direita
+                        borderRadius: { topRight: 4, bottomRight: 4 },
+                        borderSkipped: 'left'
+                    }]
+                },
+                options: {
+                    // y no lugar do x deixa as barras deitadas, os nomes cabem melhor
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: CINZA_GRADE },
+                            ticks: { precision: 0 }
+                        },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        async function carregarRanking() {
+            // encodeURIComponent pq Porção tem acento
+            const resposta = await fetch(urlComPeriodo('/api/dashboard/produtos-mais-vendidos') + '&tipo=' + encodeURIComponent(tipo.value));
+            if (!resposta.ok) {
+                mostrarErro('Não foi possível carregar os produtos mais vendidos.');
+                return;
+            }
+            const produtos = await resposta.json();
+            const tabela = document.getElementById('ranking');
+            tabela.innerHTML = '';
+
+            if (produtos.length === 0) {
+                tabela.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Nenhuma venda no período.</td></tr>';
+                return;
+            }
+
+            // monta cada linha com textContent pra nome de produto n virar html
+            for (let i = 0; i < produtos.length; i++) {
+                const linha = document.createElement('tr');
+
+                const posicao = document.createElement('td');
+                posicao.textContent = (i + 1) + 'º';
+
+                const nome = document.createElement('td');
+                nome.textContent = produtos[i].nome;
+
+                const quantidade = document.createElement('td');
+                quantidade.className = 'text-end';
+                quantidade.textContent = produtos[i].quantidade;
+
+                const faturamento = document.createElement('td');
+                faturamento.className = 'text-end';
+                faturamento.textContent = dinheiro(produtos[i].faturamento);
+
+                linha.append(posicao, nome, quantidade, faturamento);
+                tabela.appendChild(linha);
+            }
+        }
+
+        // busca tudo de novo com as datas do filtro, se o resumo der erro nem tenta o resto
         async function atualizar() {
             erro.classList.add('d-none');
             const deuCerto = await carregarResumo();
@@ -317,6 +509,8 @@
             }
             await carregarVendas();
             await carregarPorHora();
+            await carregarStatus();
+            await carregarRanking();
 
             document.getElementById('ultimaAtualizacao').textContent =
                 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
@@ -328,7 +522,17 @@
             atualizar();
         });
 
-        atualizar();
+        for (const botao of document.querySelectorAll('[data-atalho]')) {
+            botao.addEventListener('click', function () {
+                aplicarAtalho(botao.dataset.atalho);
+            });
+        }
+
+        // o tipo so muda o ranking, entao so recarrega ele
+        tipo.addEventListener('change', carregarRanking);
+
+        // abre com 30 dias marcado
+        aplicarAtalho('30');
     </script>
 </div>
 

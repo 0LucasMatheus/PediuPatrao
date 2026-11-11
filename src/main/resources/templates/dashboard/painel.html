@@ -79,14 +79,59 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold">Faturamento por dia</h6>
+                    <div style="height: 280px">
+                        <canvas id="graficoVendas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold">Pedidos por horário</h6>
+                    <div style="height: 280px">
+                        <canvas id="graficoHoras"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         const inicio = document.getElementById('inicio');
         const fim = document.getElementById('fim');
         const erro = document.getElementById('erro');
 
+        const AZUL = '#2a78d6';
+        const CINZA_GRADE = '#e9e8e4';
+
+        let graficoVendas = null;
+        let graficoHoras = null;
+
         // centavos pra R$
         function dinheiro(centavos) {
             return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function mostrarErro(mensagem) {
+            erro.textContent = mensagem;
+            erro.classList.remove('d-none');
+        }
+
+        // monta a url da api com as datas do filtro
+        function urlComPeriodo(caminho) {
+            return caminho + '?inicio=' + inicio.value + '&fim=' + fim.value;
+        }
+
+        function diaMes(data) {
+            const partes = data.split('-');
+            return partes[2] + '/' + partes[1];
         }
 
         // quanto o faturamento subiu ou caiu em relacao ao periodo anterior
@@ -122,9 +167,8 @@
 
                 // a api manda o motivo no campo erro, tipo data invalida
                 if (!resposta.ok) {
-                    erro.textContent = dados.erro || 'Não foi possível carregar o dashboard.';
-                    erro.classList.remove('d-none');
-                    return;
+                    mostrarErro(dados.erro || 'Não foi possível carregar o dashboard.');
+                    return false;
                 }
 
                 // preenche as datas com o periodo que a api usou
@@ -144,21 +188,147 @@
                 document.getElementById('cancelados').textContent = dados.cancelados;
                 document.getElementById('taxaCancelamento').textContent = dados.taxaCancelamento;
 
-                document.getElementById('ultimaAtualizacao').textContent =
-                    'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+                return true;
             } catch (e) {
-                erro.textContent = 'Não foi possível falar com o servidor.';
-                erro.classList.remove('d-none');
+                mostrarErro('Não foi possível falar com o servidor.');
+                return false;
             }
+        }
+
+        async function carregarVendas() {
+            const resposta = await fetch(urlComPeriodo('/api/dashboard/vendas'));
+            if (!resposta.ok) {
+                mostrarErro('Não foi possível carregar o gráfico de vendas.');
+                return;
+            }
+            const vendas = await resposta.json();
+
+            // o chart.js quer uma lista de nomes e uma de valores
+            const dias = [];
+            const valores = [];
+            for (const venda of vendas) {
+                dias.push(diaMes(venda.periodo));
+                valores.push(venda.faturamento);
+            }
+
+            if (graficoVendas) {
+                graficoVendas.destroy();
+            }
+            graficoVendas = new Chart(document.getElementById('graficoVendas'), {
+                type: 'line',
+                data: {
+                    labels: dias,
+                    datasets: [{
+                        label: 'Faturamento',
+                        data: valores,
+                        borderColor: AZUL,
+                        backgroundColor: AZUL,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    // tooltip aparece so de passar o mouse perto do dia
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (item) {
+                                    return 'Faturamento: ' + dinheiro(item.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: CINZA_GRADE },
+                            ticks: {
+                                callback: function (valor) {
+                                    return dinheiro(valor);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function carregarPorHora() {
+            const resposta = await fetch(urlComPeriodo('/api/dashboard/vendas-por-hora'));
+            if (!resposta.ok) {
+                mostrarErro('Não foi possível carregar o gráfico por horário.');
+                return;
+            }
+            const horas = await resposta.json();
+
+            const nomes = [];
+            const pedidos = [];
+            for (const hora of horas) {
+                nomes.push(hora.hora + 'h');
+                pedidos.push(hora.pedidos);
+            }
+
+            if (graficoHoras) {
+                graficoHoras.destroy();
+            }
+            graficoHoras = new Chart(document.getElementById('graficoHoras'), {
+                type: 'bar',
+                data: {
+                    labels: nomes,
+                    datasets: [{
+                        label: 'Pedidos',
+                        data: pedidos,
+                        backgroundColor: AZUL,
+                        maxBarThickness: 24,
+                        // arredonda so a ponta de cima da barra
+                        borderRadius: { topLeft: 4, topRight: 4 },
+                        borderSkipped: 'bottom'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: CINZA_GRADE },
+                            // n tem meio pedido
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // resumo primeiro pq ele preenche as datas, depois os graficos usam elas
+        async function atualizar() {
+            erro.classList.add('d-none');
+            const deuCerto = await carregarResumo();
+            if (!deuCerto) {
+                return;
+            }
+            await carregarVendas();
+            await carregarPorHora();
+
+            document.getElementById('ultimaAtualizacao').textContent =
+                'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
         }
 
         document.getElementById('filtros').addEventListener('submit', function (evento) {
             // n recarrega a pagina, so busca os dados de novo
             evento.preventDefault();
-            carregarResumo();
+            atualizar();
         });
 
-        carregarResumo();
+        atualizar();
     </script>
 </div>
 

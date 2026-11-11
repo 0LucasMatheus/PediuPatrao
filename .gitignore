@@ -16,3 +16,9 @@ devenv.local.yaml
 
 
 .vscode
+
+# eclipse / vscode java
+.classpath
+.factorypath
+.project
+.settings/

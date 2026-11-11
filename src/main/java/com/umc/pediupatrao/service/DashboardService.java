@@ -1,11 +1,15 @@
 package com.umc.pediupatrao.service;
 
+import com.umc.pediupatrao.dto.ProdutoVendido;
 import com.umc.pediupatrao.dto.QuantidadeStatus;
 import com.umc.pediupatrao.dto.ResumoDashboard;
 import com.umc.pediupatrao.dto.VendaHora;
 import com.umc.pediupatrao.dto.VendaPeriodo;
+import com.umc.pediupatrao.entity.ItemPedido;
 import com.umc.pediupatrao.entity.Pedido;
+import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.StatusPedido;
+import com.umc.pediupatrao.repository.ProdutoRepository;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -24,6 +28,9 @@ public class DashboardService {
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
 
     private static final int MAXIMO_DIAS = 366;
 
@@ -145,6 +152,69 @@ public class DashboardService {
             resultado.add(new QuantidadeStatus(status, quantidade[status.ordinal()]));
         }
         return resultado;
+    }
+
+    // soma os itens dos pedidos finalizados por produto e ordena do mais vendido pro menos
+    public List<ProdutoVendido> produtosMaisVendidos(LocalDate inicio, LocalDate fim, int limite, String tipo) {
+        validarPeriodo(inicio, fim);
+        if (limite < 1 || limite > 50) {
+            throw new IllegalArgumentException("O limite tem que ser entre 1 e 50.");
+        }
+
+        // com tipo escolhido so conta os produtos desse tipo
+        List<String> idsDoTipo = new ArrayList<>();
+        boolean filtrarTipo = tipo != null && !tipo.isBlank();
+        if (filtrarTipo) {
+            for (Produto produto : produtoRepository.findByTipoIgnoreCase(tipo)) {
+                idsDoTipo.add(produto.getId());
+            }
+        }
+
+        List<ProdutoVendido> ranking = new ArrayList<>();
+
+        for (Pedido pedido : pedidosDoPeriodo(inicio, fim)) {
+            if (pedido.getStatus() != StatusPedido.FINALIZADO) {
+                continue;
+            }
+            for (ItemPedido item : pedido.getItens()) {
+                if (filtrarTipo && !idsDoTipo.contains(item.getProdutoId())) {
+                    continue;
+                }
+
+                // procura se o produto ja ta no ranking
+                ProdutoVendido encontrado = null;
+                for (ProdutoVendido produto : ranking) {
+                    if (produto.getProdutoId().equals(item.getProdutoId())) {
+                        encontrado = produto;
+                    }
+                }
+
+                // primeira vez que aparece, entra zerado
+                // nome que ficou guardado no item, assim produto apagado ainda aparece
+                if (encontrado == null) {
+                    encontrado = new ProdutoVendido();
+                    encontrado.setProdutoId(item.getProdutoId());
+                    encontrado.setNome(item.getNomeProduto());
+                    ranking.add(encontrado);
+                }
+
+                encontrado.setQuantidade(encontrado.getQuantidade() + item.getQuantidade());
+                encontrado.setFaturamento(encontrado.getFaturamento() + item.getSubtotal());
+            }
+        }
+
+        // maior quantidade primeiro, se empatar quem faturou mais
+        ranking.sort((a, b) -> {
+            if (a.getQuantidade() != b.getQuantidade()) {
+                return b.getQuantidade() - a.getQuantidade();
+            }
+            return b.getFaturamento() - a.getFaturamento();
+        });
+
+        if (ranking.size() > limite) {
+            return ranking.subList(0, limite);
+        }
+        return ranking;
     }
 
     // primeiro dia do periodo, semana comeca na segunda

@@ -1,5 +1,6 @@
 package com.umc.pediupatrao.controller;
 
+import com.umc.pediupatrao.dto.ProdutoVendido;
 import com.umc.pediupatrao.dto.QuantidadeStatus;
 import com.umc.pediupatrao.dto.ResumoDashboard;
 import com.umc.pediupatrao.dto.VendaHora;
@@ -76,5 +77,20 @@ public class DashboardController {
             inicio = fim.minusDays(29);
         }
         return dashboardService.status(inicio, fim);
+    }
+
+    @GetMapping("/produtos-mais-vendidos")
+    public List<ProdutoVendido> produtosMaisVendidos(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
+            @RequestParam(defaultValue = "10") int limite,
+            @RequestParam(required = false) String tipo) {
+        if (fim == null) {
+            fim = LocalDate.now();
+        }
+        if (inicio == null) {
+            inicio = fim.minusDays(29);
+        }
+        return dashboardService.produtosMaisVendidos(inicio, fim, limite, tipo);
     }
 }

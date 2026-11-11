@@ -11,4 +11,7 @@ public interface ProdutoRepository extends MongoRepository<Produto, String> {
     // o spring monta a query pelo nome do metodo
     // 10 primeiros, nome contendo o texto sem ligar pra maiuscula, e so os ativos
     List<Produto> findTop10ByNomeContainingIgnoreCaseAndAtivoTrue(String nome);
+
+    // pro filtro de tipo do ranking, inclui os inativos pq ja foram vendidos
+    List<Produto> findByTipoIgnoreCase(String tipo);
 }

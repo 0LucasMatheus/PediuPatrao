@@ -1,10 +1,14 @@
 package com.umc.pediupatrao.service;
 
 import com.umc.pediupatrao.dto.ResumoDashboard;
+import com.umc.pediupatrao.dto.VendaPeriodo;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.StatusPedido;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -64,6 +68,56 @@ public class DashboardService {
 
         return new ResumoDashboard(inicio, fim, faturamento, ticketMedio, descontos,
                 pedidos.size(), finalizados, cancelados, emAndamento, taxaCancelamento, faturamentoAnterior);
+    }
+
+    // faturamento e qtd de pedidos finalizados em cada dia, semana ou mes
+    public List<VendaPeriodo> vendas(LocalDate inicio, LocalDate fim, String agrupar) {
+        validarPeriodo(inicio, fim);
+
+        // monta todos os periodos antes, assim os sem venda aparecem zerados
+        List<LocalDate> periodos = new ArrayList<>();
+        LocalDate atual = inicioDoPeriodo(inicio, agrupar);
+        while (!atual.isAfter(fim)) {
+            periodos.add(atual);
+            atual = proximoPeriodo(atual, agrupar);
+        }
+
+        // cada posicao e um periodo da lista de cima
+        int[] faturamento = new int[periodos.size()];
+        int[] pedidos = new int[periodos.size()];
+
+        for (Pedido pedido : pedidosDoPeriodo(inicio, fim)) {
+            if (pedido.getStatus() == StatusPedido.FINALIZADO) {
+                LocalDate periodo = inicioDoPeriodo(pedido.getDataHoraEntrada().toLocalDate(), agrupar);
+                int posicao = periodos.indexOf(periodo);
+                faturamento[posicao] += pedido.getValorTotal();
+                pedidos[posicao]++;
+            }
+        }
+
+        List<VendaPeriodo> vendas = new ArrayList<>();
+        for (int i = 0; i < periodos.size(); i++) {
+            vendas.add(new VendaPeriodo(periodos.get(i), faturamento[i], pedidos[i]));
+        }
+        return vendas;
+    }
+
+    // primeiro dia do periodo, semana comeca na segunda
+    private LocalDate inicioDoPeriodo(LocalDate data, String agrupar) {
+        return switch (agrupar) {
+            case "dia" -> data;
+            case "semana" -> data.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            case "mes" -> data.withDayOfMonth(1);
+            default -> throw new IllegalArgumentException("Agrupamento inválido, use dia, semana ou mes.");
+        };
+    }
+
+    private LocalDate proximoPeriodo(LocalDate data, String agrupar) {
+        return switch (agrupar) {
+            case "dia" -> data.plusDays(1);
+            case "semana" -> data.plusWeeks(1);
+            default -> data.plusMonths(1);
+        };
     }
 
     // da 400 pelo ApiExceptionHandler

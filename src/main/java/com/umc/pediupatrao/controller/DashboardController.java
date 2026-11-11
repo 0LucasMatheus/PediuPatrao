@@ -1,8 +1,10 @@
 package com.umc.pediupatrao.controller;
 
 import com.umc.pediupatrao.dto.ResumoDashboard;
+import com.umc.pediupatrao.dto.VendaPeriodo;
 import com.umc.pediupatrao.service.DashboardService;
 import java.time.LocalDate;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,5 +34,19 @@ public class DashboardController {
             inicio = fim.minusDays(29);
         }
         return dashboardService.resumo(inicio, fim);
+    }
+
+    @GetMapping("/vendas")
+    public List<VendaPeriodo> vendas(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
+            @RequestParam(defaultValue = "dia") String agrupar) {
+        if (fim == null) {
+            fim = LocalDate.now();
+        }
+        if (inicio == null) {
+            inicio = fim.minusDays(29);
+        }
+        return dashboardService.vendas(inicio, fim, agrupar);
     }
 }

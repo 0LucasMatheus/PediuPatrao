@@ -13,6 +13,16 @@ Esse projeto é a evolução do sistema base da **Atividade Prática M1 de Engen
 
 ---
 
+## 🍕 vídeo da dashboard
+
+
+
+https://github.com/user-attachments/assets/d1c4b10f-370d-455a-934a-aefb0465d8cb
+
+
+
+---
+
 ## 🧀 Funcionalidades
 
 #### RF01 — Controle de usuários e permissões
@@ -124,6 +134,10 @@ O `AuditoriaRepository` estende o `Repository` vazio do Spring e só declara o `
 
 <br> auditoria <br>
 <img width="1627" height="1088" alt="image" src="https://github.com/user-attachments/assets/1bd17514-1df2-4414-94b7-b69340ddf89d" />
+
+<br> dashboard <br>
+<img width="1320" height="1072" alt="image" src="https://github.com/user-attachments/assets/ec69de60-6ed6-42ec-826f-abd1fda1bf47" />
+
 
 
 

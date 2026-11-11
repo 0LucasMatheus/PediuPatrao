@@ -60,10 +60,20 @@ https://github.com/user-attachments/assets/d1c4b10f-370d-455a-934a-aefb0465d8cb
 - [x] Consulta só para `ADMIN` e `GERENTE`, sem editar ou excluir
 - [x] Senha nunca vai pro log e telefone aparece mascarado
 
+#### RF06 a RF12 — Dashboard administrativo
+- [x] RF06 — Indicadores gerais de vendas
+- [x] RF07 — Análise de vendas (gráficos)
+- [x] RF08 — Situação dos pedidos
+- [x] RF09 — Produtos mais vendidos
+- [x] RF10 — Filtros de consulta
+- [x] RF11 — Integração com a API
+- [x] RF12 — Atualização e tratamento de dados
+
 #### Extras
 - [x] Busca, filtros, ordenação e paginação em todas as listas
 - [x] Lista de pedidos mostra os pedidos do dia por padrão
 - [x] Tela de detalhe do pedido
+- [x] Seed de pedidos de demonstração com `SEED_DEMO=true`
 
 ---
 
@@ -81,6 +91,7 @@ https://github.com/user-attachments/assets/d1c4b10f-370d-455a-934a-aefb0465d8cb
 | Pedidos: registrar e mudar status | ❌ | ✅ | ✅ |
 | Pedidos: cancelar e dar desconto | ❌ | ✅ | ❌ |
 | Auditoria | ✅ | ✅ | ❌ |
+| Dashboard | ✅ | ✅ | ❌ |
 
 A proteção é feita em duas partes:
 1. `SecurityConfig` — exige login em tudo e bloqueia áreas inteiras, tipo `/usuarios/**` só pra `ADMIN`;
@@ -181,6 +192,7 @@ cp .env.example .env
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | usuário ADMIN criado na primeira execução |
 | `GERENTE_USERNAME` / `GERENTE_PASSWORD` | usuário GERENTE criado na primeira execução |
 | `ATENDENTE_USERNAME` / `ATENDENTE_PASSWORD` | usuário ATENDENTE criado na primeira execução |
+| `SEED_DEMO` | `true` cria pedidos de exemplo pro dashboard, só uma vez (padrão `false`) |
 
 **5 - Subir a aplicação**
 ```bash
@@ -226,6 +238,7 @@ As seguintes ferramentas estão sendo usadas na construção do projeto:
 - [Thymeleaf](https://www.thymeleaf.org/) + [thymeleaf-extras-springsecurity6](https://github.com/thymeleaf/thymeleaf-extras-springsecurity) (`sec:authorize` nas views)
 - [thymeleaf-layout-dialect](https://github.com/ultraq/thymeleaf-layout-dialect)
 - [Bootstrap 5](https://getbootstrap.com/) + [Bootstrap Icons](https://icons.getbootstrap.com/)
+- [Chart.js 4](https://www.chartjs.org/) — gráficos do dashboard
 
 #### **Banco de dados**
 - [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)

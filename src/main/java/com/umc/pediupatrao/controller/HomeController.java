@@ -6,6 +6,7 @@ import com.umc.pediupatrao.dto.ItemPedidoRequest;
 import com.umc.pediupatrao.dto.PedidoRequest;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
+import com.umc.pediupatrao.entity.Perfil;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.service.AuditoriaService;
@@ -13,6 +14,7 @@ import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
+import com.umc.pediupatrao.security.UsuarioLogado;
 import jakarta.servlet.http.HttpServletRequest;
 import com.umc.pediupatrao.entity.StatusPedido;
 import java.time.LocalDate;
@@ -60,9 +62,16 @@ public class HomeController {
         return "login";
     }
 
+    // admin e gerente caem no dashboard, atendente ve o bem vindo
+    // os numeros vem da /api/dashboard pelo js, que tambem bloqueia o atendente
     @GetMapping("/")
     public String home(Model model) {
-        model.addAttribute("content", "home :: content");
+        Perfil perfil = UsuarioLogado.perfil();
+        if (perfil == Perfil.ADMIN || perfil == Perfil.GERENTE) {
+            model.addAttribute("content", "dashboard/painel :: content");
+        } else {
+            model.addAttribute("content", "home :: content");
+        }
         return "layout";
     }
 

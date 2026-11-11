@@ -1,6 +1,8 @@
 package com.umc.pediupatrao.service;
 
+import com.umc.pediupatrao.dto.QuantidadeStatus;
 import com.umc.pediupatrao.dto.ResumoDashboard;
+import com.umc.pediupatrao.dto.VendaHora;
 import com.umc.pediupatrao.dto.VendaPeriodo;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.StatusPedido;
@@ -100,6 +102,49 @@ public class DashboardService {
             vendas.add(new VendaPeriodo(periodos.get(i), faturamento[i], pedidos[i]));
         }
         return vendas;
+    }
+
+    // vendas de cada hora do dia somando todos os dias do periodo, mostra o horario de pico
+    public List<VendaHora> vendasPorHora(LocalDate inicio, LocalDate fim) {
+        validarPeriodo(inicio, fim);
+
+        // posicao 0 e meia noite, posicao 23 e 23h
+        int[] faturamento = new int[24];
+        int[] pedidos = new int[24];
+
+        for (Pedido pedido : pedidosDoPeriodo(inicio, fim)) {
+            if (pedido.getStatus() == StatusPedido.FINALIZADO) {
+                int hora = pedido.getDataHoraEntrada().getHour();
+                faturamento[hora] += pedido.getValorTotal();
+                pedidos[hora]++;
+            }
+        }
+
+        List<VendaHora> vendas = new ArrayList<>();
+        for (int hora = 0; hora < 24; hora++) {
+            vendas.add(new VendaHora(hora, faturamento[hora], pedidos[hora]));
+        }
+        return vendas;
+    }
+
+    // conta todos os pedidos do periodo por status, aqui entra todo mundo n so finalizado
+    public List<QuantidadeStatus> status(LocalDate inicio, LocalDate fim) {
+        validarPeriodo(inicio, fim);
+
+        StatusPedido[] todosStatus = StatusPedido.values();
+        // ordinal e a posicao do status no enum, RECEBIDO 0, EM_PREPARACAO 1...
+        int[] quantidade = new int[todosStatus.length];
+
+        for (Pedido pedido : pedidosDoPeriodo(inicio, fim)) {
+            quantidade[pedido.getStatus().ordinal()]++;
+        }
+
+        // todos os status aparecem mesmo zerados, na ordem do fluxo
+        List<QuantidadeStatus> resultado = new ArrayList<>();
+        for (StatusPedido status : todosStatus) {
+            resultado.add(new QuantidadeStatus(status, quantidade[status.ordinal()]));
+        }
+        return resultado;
     }
 
     // primeiro dia do periodo, semana comeca na segunda

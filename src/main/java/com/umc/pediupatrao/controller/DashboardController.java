@@ -1,6 +1,8 @@
 package com.umc.pediupatrao.controller;
 
+import com.umc.pediupatrao.dto.QuantidadeStatus;
 import com.umc.pediupatrao.dto.ResumoDashboard;
+import com.umc.pediupatrao.dto.VendaHora;
 import com.umc.pediupatrao.dto.VendaPeriodo;
 import com.umc.pediupatrao.service.DashboardService;
 import java.time.LocalDate;
@@ -48,5 +50,31 @@ public class DashboardController {
             inicio = fim.minusDays(29);
         }
         return dashboardService.vendas(inicio, fim, agrupar);
+    }
+
+    @GetMapping("/vendas-por-hora")
+    public List<VendaHora> vendasPorHora(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        if (fim == null) {
+            fim = LocalDate.now();
+        }
+        if (inicio == null) {
+            inicio = fim.minusDays(29);
+        }
+        return dashboardService.vendasPorHora(inicio, fim);
+    }
+
+    @GetMapping("/status")
+    public List<QuantidadeStatus> status(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        if (fim == null) {
+            fim = LocalDate.now();
+        }
+        if (inicio == null) {
+            inicio = fim.minusDays(29);
+        }
+        return dashboardService.status(inicio, fim);
     }
 }
